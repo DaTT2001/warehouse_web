@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Row, Col, Table, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { getProducts, getReports } from '../api/warehouseAPI'; // Các API lấy dữ liệu
+import { getProducts } from '../api/warehouseAPI'; // Các API lấy dữ liệu
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [inventory, setInventory] = useState([]);
-  const [reports, setReports] = useState([]);
+  // const [reports, setReports] = useState([]);
   const [totalQuantity, setTotalQuantity] = useState(0);
 
   useEffect(() => {
@@ -14,9 +14,9 @@ const Dashboard = () => {
     const fetchData = async () => {
       const inventoryData = await getProducts(); // Lấy danh sách hàng trong kho
     //   console.log(inventoryData)
-      const reportsData = await getReports(); // Lấy báo cáo kho
+      // const reportsData = await getReports(); // Lấy báo cáo kho
       setInventory(inventoryData);
-      setReports(reportsData);
+      // setReports(reportsData);
     //   const total = response.data.reduce((acc, product) => acc + product.quantity, 0);
         setTotalQuantity(inventoryData.reduce((acc, product) => acc + product.quantity, 0));
     };
@@ -85,14 +85,14 @@ const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {reports.map((report, index) => (
+                  {/* {reports.map((report, index) => (
                     <tr key={index}>
                       <td>{report.date}</td>
                       <td>{report.product}</td>
                       <td>{report.in}</td>
                       <td>{report.out}</td>
                     </tr>
-                  ))}
+                  ))} */}
                 </tbody>
               </Table>
             </Card.Body>

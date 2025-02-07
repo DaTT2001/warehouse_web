@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Table, Container, Spinner, Alert, Pagination } from "react-bootstrap";
-import useActivityLogger from "../hooks/useActivityLogger";
+// import useActivityLogger from "../hooks/useActivityLogger";
 import { getLogs } from "../api/warehouseAPI"; // Đảm bảo import đúng file API
 
 const LogsPage = () => {
-  useActivityLogger("Truy cập trang nhật ký");
+  // useActivityLogger("Truy cập trang nhật ký");
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

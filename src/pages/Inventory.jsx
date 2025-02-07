@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Table, Container, Spinner, Alert, Pagination, Form, Row, Col } from "react-bootstrap";
 import { getProducts, getSuppliers } from "../api/warehouseAPI";
+// import { sendLog } from '../utils/functions';
+import useActivityLogger from "../hooks/useActivityLogger";
+import { getUserRole } from "../utils/auth";
 
 const Inventory = () => {
+  useActivityLogger("Truy cập trang kho hàng");
+  const [role, setRole] = useState(null);
   const [products, setProducts] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,6 +18,9 @@ const Inventory = () => {
   const [stockFilter, setStockFilter] = useState("");
 
   const itemsPerPage = 20;
+  useEffect(() => {
+      setRole(getUserRole()); // Lấy quyền khi component mount
+  }, []);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -109,6 +117,9 @@ const Inventory = () => {
                 <th>Giá</th>
                 <th>Số lượng</th>
                 <th>Nhà cung cấp</th>
+                {
+                  (role === "Admin" || role === "Warehouse_Manager") && <th>Hành động</th>
+                } 
               </tr>
             </thead>
             <tbody>
@@ -123,6 +134,9 @@ const Inventory = () => {
                       <td>{product.price.toLocaleString("vi-VN")}</td>
                       <td>{product.quantity}</td>
                       <td>{supplierName}</td>
+                      {
+                        (role === "Admin" || role === "Warehouse_Manager") && <td></td>
+                      }    
                     </tr>
                   );
                 })
