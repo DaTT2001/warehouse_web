@@ -1,0 +1,11 @@
+.footerLink {
+  text-decoration: none;
+  font-weight: normal;
+  color: white;
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.footerLink:hover {
+  color: #f8d210;
+  transform: translateY(-2px);
+}

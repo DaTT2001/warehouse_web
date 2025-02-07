@@ -1,7 +1,7 @@
 // src/components/PrivateRoute.js
 
 import React, { useEffect, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { isAuthenticated } from '../services/authService';  // Import logic kiểm tra xác thực
 
 const PrivateRoute = ({ element }) => {

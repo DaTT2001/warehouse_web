@@ -1,8 +1,7 @@
 // src/api/auth.js
 import axios from 'axios';
-
+import { API_URL } from '../utils/constants';
 // URL của API backend
-const API_URL = 'http://192.168.10.87:3000'; // Thay đổi theo API của bạn
 
 // Hàm đăng nhập
 export const login = async (username, password) => {
