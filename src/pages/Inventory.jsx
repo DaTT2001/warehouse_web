@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Table, Container, Spinner, Alert, Pagination, Form, Row, Col } from "react-bootstrap";
-import { getProducts, getSuppliers } from "../api/warehouseAPI";
-// import { sendLog } from '../utils/functions';
+import { Table, Container, Spinner, Alert, Pagination, Form, Row, Col, Button } from "react-bootstrap";
+import { getProducts, getSuppliers, deleteProduct } from "../api/warehouseAPI";
 import useActivityLogger from "../hooks/useActivityLogger";
 import { getUserRole } from "../utils/auth";
+import ProductForm from "../components/ProductForm";
+import EditProductForm from "../components/EditProductForm"; // Form chỉnh sửa sản phẩm
+import { toast } from "react-toastify";
+import ConfirmationModal from "../components/ConfirmationModal";
+
 
 const Inventory = () => {
   useActivityLogger("Truy cập trang kho hàng");
@@ -16,31 +20,38 @@ const Inventory = () => {
   const [search, setSearch] = useState("");
   const [selectedSupplier, setSelectedSupplier] = useState("");
   const [stockFilter, setStockFilter] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
 
   const itemsPerPage = 20;
+
   useEffect(() => {
-      setRole(getUserRole()); // Lấy quyền khi component mount
+    setRole(getUserRole());
   }, []);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const data = await getProducts();
-        setProducts(data);
-      } catch (err) {
-        setError("Không thể tải danh sách sản phẩm!");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchProducts();
   }, []);
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const data = await getProducts();
+      setProducts(data.sort((a, b) => a.productid - b.productid)); // Sắp xếp theo ID
+    } catch (err) {
+      setError("Không thể tải danh sách sản phẩm!");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
         const data = await getSuppliers();
         setSuppliers(data);
+        console.log(data)
       } catch (err) {
         setError("Không thể tải danh sách nhà cung cấp!");
       }
@@ -48,7 +59,18 @@ const Inventory = () => {
     fetchSuppliers();
   }, []);
 
-  // Lọc sản phẩm theo điều kiện tìm kiếm
+  const handleDelete = async (id) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) {
+      try {
+        await deleteProduct(id);
+        toast.success("Xóa sản phẩm thành công!");
+        fetchProducts();
+      } catch (err) {
+        toast.error("Xóa thất bại! Vui lòng thử lại.");
+      }
+    }
+  };
+
   const filteredProducts = products.filter((product) => {
     return (
       (search === "" ||
@@ -62,7 +84,6 @@ const Inventory = () => {
     );
   });
 
-  // Phân trang
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const displayedProducts = filteredProducts.slice(
     (currentPage - 1) * itemsPerPage,
@@ -71,9 +92,13 @@ const Inventory = () => {
 
   return (
     <Container className="mt-4">
-      <h2 className="mb-4">📦 Quản lý kho</h2>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2>📦 Quản lý kho</h2>
+        {(role === "Admin" || role === "Warehouse_Manager") && (
+          <Button variant="success" onClick={() => setShowAddModal(true)}>➕ Thêm Sản Phẩm</Button>
+        )}
+      </div>
 
-      {/* Thanh tìm kiếm và bộ lọc */}
       <Row className="mb-3">
         <Col md={4}>
           <Form.Control
@@ -98,7 +123,7 @@ const Inventory = () => {
             <option value="">Tất cả số lượng</option>
             <option value="low">Tồn kho thấp (&lt;10)</option>
             <option value="high">Tồn kho cao (&ge;10)</option>
-            <option value="restock">Cần bổ sung (&lt;=1)</option>
+            <option value="restock">Cần bổ sung (&lt;=5)</option>
           </Form.Select>
         </Col>
       </Row>
@@ -117,14 +142,12 @@ const Inventory = () => {
                 <th>Giá</th>
                 <th>Số lượng</th>
                 <th>Nhà cung cấp</th>
-                {
-                  (role === "Admin" || role === "Warehouse_Manager") && <th>Hành động</th>
-                } 
+                {(role === "Admin" || role === "Warehouse_Manager") && <th>Hành động</th>}
               </tr>
             </thead>
             <tbody>
               {displayedProducts.length > 0 ? (
-                displayedProducts.map((product, index) => {
+                displayedProducts.map((product) => {
                   const supplierName = suppliers.find(s => s.supplierid === product.supplierid)?.suppliername || "Không có";
                   return (
                     <tr key={product.productid}>
@@ -134,15 +157,34 @@ const Inventory = () => {
                       <td>{product.price.toLocaleString("vi-VN")}</td>
                       <td>{product.quantity}</td>
                       <td>{supplierName}</td>
-                      {
-                        (role === "Admin" || role === "Warehouse_Manager") && <td></td>
-                      }    
+                      {(role === "Admin" || role === "Warehouse_Manager") && (
+                        <td>
+                          <Button
+                            variant="warning"
+                            size="sm"
+                            className="me-2"
+                            onClick={() => {
+                              setEditingProduct(product);
+                              setShowEditModal(true);
+                            }}
+                          >
+                            ✏️ Sửa
+                          </Button>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => handleDelete(product.productid)}
+                          >
+                            🗑️ Xóa
+                          </Button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan="6" className="text-center">
+                  <td colSpan="7" className="text-center">
                     Không có dữ liệu.
                   </td>
                 </tr>
@@ -150,7 +192,6 @@ const Inventory = () => {
             </tbody>
           </Table>
 
-          {/* Phân trang */}
           <Pagination className="justify-content-center">
             {[...Array(totalPages).keys()].map((page) => (
               <Pagination.Item
@@ -163,6 +204,20 @@ const Inventory = () => {
             ))}
           </Pagination>
         </>
+      )}
+
+      {/* Modal thêm sản phẩm */}
+      <ProductForm show={showAddModal} onHide={() => setShowAddModal(false)} onProductAdded={fetchProducts} suppliers={suppliers}/>
+
+      {/* Modal sửa sản phẩm */}
+      {editingProduct && (
+        <EditProductForm
+          show={showEditModal}
+          onHide={() => setShowEditModal(false)}
+          onProductUpdated={fetchProducts}
+          initialData={editingProduct}
+          suppliers={suppliers}
+        />
       )}
     </Container>
   );

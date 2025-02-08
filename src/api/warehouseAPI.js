@@ -11,6 +11,37 @@ export const getProducts = async () => {
   }
 };
 
+export const addProduct = async (productData) => {
+  try {
+    const response = await axios.post(`${API_URL}/products`, productData);
+    return response.data;
+  } catch (error) {
+    console.error(error.response?.data.error || error.message);
+    throw error; // Ném lỗi để xử lý ở frontend
+  }
+};
+
+export const deleteProduct = async (productID) => {
+  try {
+    const response = await axios.delete(`${API_URL}/products/${productID}`);
+    return response.data;
+  } catch (error) {
+    console.error("API lỗi khi xóa sản phẩm:", error.response?.data || error.message);
+    throw error; // Quan trọng: ném lỗi ra ngoài để catch được
+  }
+};
+
+export const updateProduct = async (productid, productData) => {
+  try {
+    const response = await axios.put(`${API_URL}/products/${productid}`, productData);
+    console.log(`${API_URL}/products/${productid}`)
+    return response.data;
+  } catch (error) {
+    console.error(error.response?.data.error || error.message);
+    throw error; // Ném lỗi để xử lý ở frontend
+  }
+};
+
 export const getLogs = async () => {
   try {
     const response = await axios.get(`${API_URL}/logs`);
