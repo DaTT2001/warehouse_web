@@ -6,6 +6,9 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import useActivityLogger from "../hooks/useActivityLogger";
 import { getUserRole } from "../utils/auth";
+import SupplierForm from "../components/SupplierForm";
+import EditSupplierForm from "../components/EditSupplierForm";
+
 
 const Suppliers = () => {
   useActivityLogger("Truy cập trang nhà cung cấp");
@@ -19,6 +22,15 @@ const Suppliers = () => {
   const [deleteError, setDeleteError] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [role, setRole] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingSupplier, setEditingSupplier] = useState(null);
+
+  const handleShowEditModal = (supplier) => {
+    setEditingSupplier(supplier);
+    setShowEditModal(true);
+  };
+  
 
   useEffect(() => {
     setRole(getUserRole()); // Lấy quyền khi component mount
@@ -26,6 +38,25 @@ const Suppliers = () => {
 
   const itemsPerPage = 10;
   
+  const fetchSuppliers = async () => {
+    try {
+      setLoading(true); // Bắt đầu load lại danh sách
+      const data = await getSuppliers();
+      // Sắp xếp danh sách theo supplierid tăng dần
+      const sortedData = data.sort((a, b) => a.supplierid - b.supplierid);
+      setSuppliers(sortedData);
+    } catch (err) {
+      setError("Không thể tải danh sách nhà cung cấp!");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
+    fetchSuppliers(); // Gọi hàm khi component mount
+  }, []);
+  
+
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
@@ -53,18 +84,16 @@ const Suppliers = () => {
     try {
       await deleteSupplier(supplierToDelete.supplierid);
       setSuppliers(suppliers.filter((s) => s.supplierid !== supplierToDelete.supplierid));
-      toast.success("✅ Xóa nhà cung cấp thành công!");
+      toast.success("Xóa nhà cung cấp thành công!");
       setShowDeleteModal(false);
     } catch (err) {
-      const errorMessage = err.response?.data?.error || "❌ Xóa thất bại! Lỗi không xác định.";
+      const errorMessage = err.response?.data?.error || "Xóa thất bại! Lỗi không xác định.";
       toast.error(errorMessage);
       setShowDeleteModal(false); // Đóng modal ngay cả khi lỗi xảy ra
     } finally {
       setIsDeleting(false);
     }
   };
-  
-  
   
 
   const filteredSuppliers = suppliers.filter((supplier) =>
@@ -93,7 +122,7 @@ const Suppliers = () => {
         </Col>
         <Col md={4} className="text-end">
           {
-            (role === "Admin" || role === "Warehouse_Manager") && <Button variant="primary">➕ Thêm Nhà Cung Cấp</Button>
+            (role === "Admin" || role === "Warehouse_Manager") && <Button variant="primary" onClick={() => setShowAddModal(true)}>➕ Thêm Nhà Cung Cấp</Button>
           }
         </Col>
       </Row>
@@ -130,7 +159,7 @@ const Suppliers = () => {
                       {
                         (role === "Admin" || role === "Warehouse_Manager") &&
                         <td>
-                          <Button variant="warning" size="sm" className="me-2">✏️ Sửa</Button>
+                          <Button variant="warning" size="sm" className="me-2" onClick={() => handleShowEditModal(supplier)}>✏️ Sửa</Button>
                           <Button
                             variant="danger"
                             size="sm"
@@ -175,19 +204,14 @@ const Suppliers = () => {
         onConfirm={handleDelete}
         loading={isDeleting}
       />
-      
-      {/* {deleteError && (
-        <Alert variant="danger" className="mt-3" onClose={() => setDeleteError(null)} dismissible>
-          {deleteError}
-        </Alert>
-      )} */}
+
       {deleteError && (
         <Alert variant="danger" className="mt-3" onClose={() => setDeleteError(null)} dismissible>
           {deleteError}
         </Alert>
       )}
-
-
+      <SupplierForm show={showAddModal} onHide={() => setShowAddModal(false)} onSupplierAdded={fetchSuppliers}/>
+      <EditSupplierForm show={showEditModal} onHide={() => setShowEditModal(false)} onSupplierUpdated={fetchSuppliers} initialData={editingSupplier}/>
     </Container>
   );
 };

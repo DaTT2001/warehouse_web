@@ -50,3 +50,24 @@ export const deleteSupplier = async (supplierId) => {
     throw error; // Quan trọng: ném lỗi ra ngoài để catch được
   }
 };
+
+export const addSupplier = async (supplierData) => {
+  try {
+    const response = await axios.post(`${API_URL}/suppliers`, supplierData);
+    return response.data;
+  } catch (error) {
+    console.error(error.response?.data.error || error.message);
+    throw error; // Ném lỗi để xử lý ở frontend
+  }
+};
+
+export const updateSupplier = async (supplierid, supplierData) => {
+  try {
+    const response = await axios.put(`${API_URL}/suppliers/${supplierid}`, supplierData);
+    console.log(`${API_URL}/suppliers/${supplierid}`)
+    return response.data;
+  } catch (error) {
+    console.error(error.response?.data.error || error.message);
+    throw error; // Ném lỗi để xử lý ở frontend
+  }
+};
