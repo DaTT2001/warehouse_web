@@ -3,7 +3,12 @@ import { API_URL } from "../utils/constants";
 
 export const getProducts = async () => {
   try {
-    const response = await axios.get(`${API_URL}/products`);
+    const token = sessionStorage.getItem("token");
+    const response = await axios.get(`${API_URL}/products`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Gửi token trong header
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Lấy danh sách sản phẩm thất bại:", error);
@@ -13,7 +18,12 @@ export const getProducts = async () => {
 
 export const addProduct = async (productData) => {
   try {
-    const response = await axios.post(`${API_URL}/products`, productData);
+    const token = sessionStorage.getItem("token");
+    const response = await axios.post(`${API_URL}/products`, productData, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Gửi token trong header
+      },
+    });
     return response.data;
   } catch (error) {
     console.error(error.response?.data.error || error.message);
@@ -23,7 +33,14 @@ export const addProduct = async (productData) => {
 
 export const deleteProduct = async (productID) => {
   try {
-    const response = await axios.delete(`${API_URL}/products/${productID}`);
+    const token = sessionStorage.getItem("token"); // Lấy token từ sessionStorage
+
+    const response = await axios.delete(`${API_URL}/products/${productID}`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Gửi token trong header
+      },
+    });
+
     return response.data;
   } catch (error) {
     console.error("API lỗi khi xóa sản phẩm:", error.response?.data || error.message);
@@ -33,7 +50,12 @@ export const deleteProduct = async (productID) => {
 
 export const updateProduct = async (productid, productData) => {
   try {
-    const response = await axios.put(`${API_URL}/products/${productid}`, productData);
+    const token = sessionStorage.getItem("token");
+    const response = await axios.put(`${API_URL}/products/${productid}`, productData, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Gửi token trong header
+      },
+    });
     console.log(`${API_URL}/products/${productid}`)
     return response.data;
   } catch (error) {
@@ -64,7 +86,12 @@ export const getReports = async () => {
 
 export const getSuppliers = async () => {
   try {
-    const response = await axios.get(`${API_URL}/suppliers`);
+    const token = sessionStorage.getItem("token");
+    const response = await axios.get(`${API_URL}/suppliers`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Gửi token trong header
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Lấy danh sách nhà cung cấp thất bại:", error);
@@ -74,7 +101,12 @@ export const getSuppliers = async () => {
 
 export const deleteSupplier = async (supplierId) => {
   try {
-    const response = await axios.delete(`${API_URL}/suppliers/${supplierId}`);
+    const token = sessionStorage.getItem("token")
+    const response = await axios.delete(`${API_URL}/suppliers/${supplierId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Gửi token trong header
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("API lỗi khi xóa nhà cung cấp:", error.response?.data || error.message);
@@ -84,7 +116,12 @@ export const deleteSupplier = async (supplierId) => {
 
 export const addSupplier = async (supplierData) => {
   try {
-    const response = await axios.post(`${API_URL}/suppliers`, supplierData);
+    const token = sessionStorage.getItem("token")
+    const response = await axios.post(`${API_URL}/suppliers`, supplierData, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Gửi token trong header
+      },
+    });
     return response.data;
   } catch (error) {
     console.error(error.response?.data.error || error.message);
@@ -94,7 +131,12 @@ export const addSupplier = async (supplierData) => {
 
 export const updateSupplier = async (supplierid, supplierData) => {
   try {
-    const response = await axios.put(`${API_URL}/suppliers/${supplierid}`, supplierData);
+    const token = sessionStorage.getItem("token");
+    const response = await axios.put(`${API_URL}/suppliers/${supplierid}`, supplierData, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Gửi token trong header
+      },
+    });
     console.log(`${API_URL}/suppliers/${supplierid}`)
     return response.data;
   } catch (error) {

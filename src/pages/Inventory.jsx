@@ -23,6 +23,9 @@ const Inventory = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const itemsPerPage = 20;
 
@@ -33,6 +36,11 @@ const Inventory = () => {
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  const handleDeleteClick = (product) => {
+    setProductToDelete(product);  // Lưu sản phẩm cần xóa
+    setShowDeleteModal(true);     // Hiển thị modal xác nhận
+  };
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -59,16 +67,20 @@ const Inventory = () => {
     fetchSuppliers();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) {
+  const handleDelete = async () => {
+    if (!productToDelete) return;
+    setIsDeleting(true) 
       try {
-        await deleteProduct(id);
+        await deleteProduct(productToDelete.productid);
         toast.success("Xóa sản phẩm thành công!");
         fetchProducts();
       } catch (err) {
         toast.error("Xóa thất bại! Vui lòng thử lại.");
+      } finally {
+        setIsDeleting(false);
+        setShowDeleteModal(false);
+        setProductToDelete(null);
       }
-    }
   };
 
   const filteredProducts = products.filter((product) => {
@@ -173,7 +185,7 @@ const Inventory = () => {
                           <Button
                             variant="danger"
                             size="sm"
-                            onClick={() => handleDelete(product.productid)}
+                            onClick={() => handleDeleteClick(product)}
                           >
                             🗑️ Xóa
                           </Button>
@@ -219,6 +231,15 @@ const Inventory = () => {
           suppliers={suppliers}
         />
       )}
+      {/* Modal xác nhận xóa */}
+      <ConfirmationModal 
+        show={showDeleteModal}
+        onHide={() => setShowDeleteModal(false)}
+        title="Xác nhận xóa"
+        message={`Bạn có chắc chắn muốn xóa sản phẩm "${productToDelete?.productname}" không?`}
+        onConfirm={handleDelete}
+        loading={isDeleting}
+      />
     </Container>
   );
 };
