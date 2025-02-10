@@ -48,21 +48,22 @@ export const deleteProduct = async (productID) => {
   }
 };
 
-export const updateProduct = async (productid, productData) => {
+export const updateProduct = async (productid, updatedProduct) => {
   try {
     const token = sessionStorage.getItem("token");
-    const response = await axios.put(`${API_URL}/products/${productid}`, productData, {
+    const response = await axios.put(`${API_URL}/products/${productid}`, updatedProduct, {
       headers: {
         Authorization: `Bearer ${token}`, // Gửi token trong header
       },
     });
-    console.log(`${API_URL}/products/${productid}`)
-    return response.data;
+
+    return response.data; // Trả về dữ liệu cập nhật thành công
   } catch (error) {
-    console.error(error.response?.data.error || error.message);
-    throw error; // Ném lỗi để xử lý ở frontend
+    console.error("Lỗi khi cập nhật sản phẩm:", error.response?.data.error || error.message);
+    return null; // Trả về null để frontend có thể kiểm tra lỗi
   }
 };
+
 
 export const getLogs = async () => {
   try {
@@ -142,5 +143,19 @@ export const updateSupplier = async (supplierid, supplierData) => {
   } catch (error) {
     console.error(error.response?.data.error || error.message);
     throw error; // Ném lỗi để xử lý ở frontend
+  }
+};
+
+export const saveOrder = async (orderData) => {
+  try {
+    const response = await axios.post(`${API_URL}/orders`, orderData, {
+      headers: {
+        Authorization: `Bearer ${sessionStorage.getItem("token")}`, // Gửi token trong header
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("❌ Lỗi khi lưu đơn hàng:", error.response?.data?.error || error.message);
+    throw error;
   }
 };

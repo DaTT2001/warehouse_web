@@ -1,104 +1,191 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Button, Row, Col, Table, Container } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import { getProducts } from '../api/warehouseAPI'; // Các API lấy dữ liệu
+import React, { useState, useEffect } from "react";
+import { Card, Button, Row, Col, Table, Container, Alert } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import { getProducts, getSuppliers } from "../api/warehouseAPI";
+import { Line } from "react-chartjs-2";
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
+import zoomPlugin from "chartjs-plugin-zoom";
+import TakeProductModal from "../components/TakeProductModal";
+
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, zoomPlugin);
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [inventory, setInventory] = useState([]);
-  // const [reports, setReports] = useState([]);
   const [totalQuantity, setTotalQuantity] = useState(0);
+  const [lowStockProducts, setLowStockProducts] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [showTakeModal, setShowTakeModal] = useState(false);
 
   useEffect(() => {
-    // Fetch dữ liệu khi trang được load
     const fetchData = async () => {
-      const inventoryData = await getProducts(); // Lấy danh sách hàng trong kho
-    //   console.log(inventoryData)
-      // const reportsData = await getReports(); // Lấy báo cáo kho
+      const inventoryData = await getProducts();
+      const suppliersData = await getSuppliers();
       setInventory(inventoryData);
-      // setReports(reportsData);
-    //   const total = response.data.reduce((acc, product) => acc + product.quantity, 0);
-        setTotalQuantity(inventoryData.reduce((acc, product) => acc + product.quantity, 0));
+      setSuppliers(suppliersData);
+      setTotalQuantity(inventoryData.reduce((acc, product) => acc + product.quantity, 0));
+      setLowStockProducts(inventoryData.filter(product => product.quantity < 10));
     };
 
     fetchData();
   }, []);
 
-  // Điều hướng khi click vào các chức năng
   const handleNavigate = (path) => {
     navigate(path);
+  };
+
+  const abbreviateName = (name, maxLength = 20) => {
+    if (name.length <= maxLength) return name;
+    return name.substring(0, maxLength) + "...";
+  };
+
+  // Giới hạn số sản phẩm ban đầu
+  const limitedInventory = inventory; // Hiển thị tất cả sản phẩm
+
+
+  // Dữ liệu cho biểu đồ
+  const chartData = {
+    labels: limitedInventory.map(product => abbreviateName(product.productname)),
+    datasets: [
+      {
+        label: "Số lượng sản phẩm",
+        data: limitedInventory.map(product => product.quantity),
+        backgroundColor: "rgba(75,192,192,0.4)",
+        borderColor: "rgba(75,192,192,1)",
+        borderWidth: 2,
+        pointRadius: 5, // Điểm trên biểu đồ
+      },
+    ],
+  };
+
+  // Cấu hình biểu đồ
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        ticks: {
+          autoSkip: false, // Không bỏ qua nhãn trục x
+        },
+      },
+      y: {
+        beginAtZero: true,
+      },
+    },
+    plugins: {
+      zoom: {
+        pan: {
+          enabled: true,
+          mode: "x", // Chỉ kéo ngang
+        },
+        zoom: {
+          wheel: {
+            enabled: true, // Zoom bằng cuộn chuột
+          },
+          pinch: {
+            enabled: true, // Zoom bằng cảm ứng
+          },
+          mode: "x",
+        },
+      },
+    },
   };
 
   return (
     <Container className="mt-4">
       <Row className="mb-4">
-        {/* Card tổng quan kho */}
-        <Col md={6}>
-          <Card>
+        <Col md={12}>
+          <Card className="p-4 shadow-sm">
             <Card.Body>
-              <Card.Title>Tổng quan kho</Card.Title>
-              <p><strong>Loại sản phẩm:</strong> {inventory.length}</p>
-              <p><strong>Sản phẩm tồn kho:</strong> {totalQuantity}</p>
-              <Button variant="primary" onClick={() => handleNavigate('/inventory')}>Quản lý kho</Button>
+              <Card.Title className="text-center fw-bold fs-4">Tổng quan kho</Card.Title>
+              <Row className="text-center">
+                <Col>
+                  <h5 className="text-muted">Loại sản phẩm</h5>
+                  <h3 className="fw-bold text-primary">{inventory.length}</h3>
+                </Col>
+                <Col>
+                  <h5 className="text-muted">Sản phẩm tồn kho</h5>
+                  <h3 className="fw-bold text-success">{totalQuantity}</h3>
+                </Col>
+                <Col>
+                  <h5 className="text-muted">Nhà cung cấp</h5>
+                  <h3 className="fw-bold text-danger">{suppliers.length}</h3>
+                </Col>
+              </Row>
+              <div className="d-flex justify-content-center gap-3 mt-4">
+                <Button variant="primary" size="lg" onClick={() => handleNavigate("/inventory")}>
+                  Quản lý kho
+                </Button>
+                <Button variant="warning" size="lg" onClick={() => setShowTakeModal(true)}>
+                  Lấy hàng
+                </Button>
+              </div>
             </Card.Body>
           </Card>
         </Col>
-
-        {/* Card nhập hàng */}
-        <Col md={3}>
-          <Card>
-            <Card.Body>
-              <Card.Title>Nhập hàng</Card.Title>
-              <Button variant="success" onClick={() => handleNavigate('/import')}>Nhập hàng</Button>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        {/* Card lấy hàng */}
-        <Col md={3}>
-          <Card>
-            <Card.Body>
-              <Card.Title>Lấy hàng</Card.Title>
-              <Button variant="warning" onClick={() => handleNavigate('/take')}>Lấy hàng</Button>
-            </Card.Body>
-          </Card>
-        </Col>
-        {/* Card Log */}
       </Row>
 
-      {/* Báo cáo kho */}
+      {lowStockProducts.length > 0 && (
+        <Alert variant="danger">
+          <strong>Chú ý!</strong> Có {lowStockProducts.length} sản phẩm sắp hết hàng.
+        </Alert>
+      )}
+
+      {/* Biểu đồ thống kê */}
+      <Row className="mb-4">
+        <Col>
+          <Card>
+            <Card.Body>
+              <Card.Title>Thống kê số lượng sản phẩm</Card.Title>
+              <div style={{ width: "100%", overflowX: "auto", padding: "10px" }}>
+                <div style={{ minWidth: "1200px", height: "400px" }}> {/* Min-width giúp tạo thanh cuộn */}
+                  <Line data={chartData} options={chartOptions} />
+                </div>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
       <Row>
         <Col>
           <Card>
             <Card.Body>
               <div className="d-flex justify-content-between align-items-center">
                 <Card.Title className="mb-0">Báo cáo kho</Card.Title>
-                <a href="/reports" className="text-primary fw-bold">Chi tiết →</a>
+                <a href="/reports" className="text-primary fw-bold">
+                  Chi tiết →
+                </a>
               </div>
-              <Table striped bordered hover>
-                <thead>
-                  <tr>
-                    <th>Ngày</th>
-                    <th>Sản phẩm</th>
-                    <th>Nhập</th>
-                    <th>Xuất</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* {reports.map((report, index) => (
-                    <tr key={index}>
-                      <td>{report.date}</td>
-                      <td>{report.product}</td>
-                      <td>{report.in}</td>
-                      <td>{report.out}</td>
+              <div style={{ overflowX: "auto" }}>
+                <Table striped bordered hover>
+                  <thead>
+                    <tr>
+                      <th>Ngày</th>
+                      <th>Sản phẩm</th>
+                      <th>Nhập</th>
+                      <th>Xuất</th>
                     </tr>
-                  ))} */}
-                </tbody>
-              </Table>
+                  </thead>
+                  <tbody>
+                    {/* {reports.map((report, index) => (
+                      <tr key={index}>
+                        <td>{report.date}</td>
+                        <td>{abbreviateName(report.product)}</td>
+                        <td>{report.in}</td>
+                        <td>{report.out}</td>
+                      </tr>
+                    ))} */}
+                  </tbody>
+                </Table>
+              </div>
             </Card.Body>
           </Card>
         </Col>
       </Row>
+      {/* Modal lấy hàng */}
+      <TakeProductModal show={showTakeModal} handleClose={() => setShowTakeModal(false)} inventory={inventory} />
     </Container>
   );
 };

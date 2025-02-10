@@ -27,7 +27,7 @@ const Inventory = () => {
   const [productToDelete, setProductToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const itemsPerPage = 20;
+  const itemsPerPage = 10;
 
   useEffect(() => {
     setRole(getUserRole());

@@ -14,6 +14,7 @@ import NotFound from './pages/NotFound';
 import PrivateRoute from './components/PrivateRoute';
 import Suppliers from './pages/Suppliers';
 import LogsPage from './pages/LogsPage';
+import SessionTimer from './components/SessionTimer';
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -30,19 +31,22 @@ const Layout = ({ children }) => {
 
 function App() {
   return (
-    <Router>
-      <Layout>
-        <Routes>
-          <Route path="/login" element={<Login />} /> 
-          <Route path="/" element={<PrivateRoute element={<Dashboard />} />} />
-          <Route path="/inventory" element={<PrivateRoute element={<Inventory />} />} />
-          <Route path="/logs" element={<PrivateRoute element={<LogsPage />} />} />
-          <Route path="/suppliers" element={<PrivateRoute element={<Suppliers />} />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Layout>
-      <ToastContainer position="top-right" autoClose={3000} />
-    </Router>
+    <>
+      <SessionTimer/>
+      <Router>
+        <Layout>
+          <Routes>
+            <Route path="/login" element={<Login />} /> 
+            <Route path="/" element={<PrivateRoute element={<Dashboard />} />} />
+            <Route path="/inventory" element={<PrivateRoute element={<Inventory />} />} />
+            <Route path="/logs" element={<PrivateRoute element={<LogsPage />} />} />
+            <Route path="/suppliers" element={<PrivateRoute element={<Suppliers />} />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Layout>
+        <ToastContainer position="top-right" autoClose={3000} />
+      </Router>
+    </>
   );
 }
 
