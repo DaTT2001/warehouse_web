@@ -61,7 +61,8 @@ const TakeProductModal = ({ show, handleClose, inventory }) => {
         productname: selectedProduct.productname,
         quantity: parseInt(quantity),
         timestamp: new Date().toISOString(),
-      });
+        type: "Export",
+    });
 
       setCountdown(300); // Reset countdown
       setShowPreview(true); // Mở modal xem trước đơn hàng

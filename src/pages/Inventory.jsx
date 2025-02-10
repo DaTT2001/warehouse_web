@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { Table, Container, Spinner, Alert, Pagination, Form, Row, Col, Button } from "react-bootstrap";
-import { getProducts, getSuppliers, deleteProduct } from "../api/warehouseAPI";
+import { getProducts, getSuppliers, deleteProduct, updateProduct, saveOrder } from "../api/warehouseAPI"; // Thêm API updateProduct
 import useActivityLogger from "../hooks/useActivityLogger";
 import { getUserRole } from "../utils/auth";
 import ProductForm from "../components/ProductForm";
 import EditProductForm from "../components/EditProductForm"; // Form chỉnh sửa sản phẩm
 import { toast } from "react-toastify";
 import ConfirmationModal from "../components/ConfirmationModal";
+import AddProductModal from "../components/AddProductModal"; // Modal thêm sản phẩm
 import { activityLogger } from "../utils/activityLogger";
-
+import { jwtDecode } from "jwt-decode";
 
 const Inventory = () => {
   useActivityLogger("Truy cập trang kho hàng");
@@ -25,8 +26,11 @@ const Inventory = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [orderData, setOrderData] = useState(null);
   const [productToDelete, setProductToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showAddQuantityModal, setShowAddQuantityModal] = useState(false); // Thêm trạng thái cho modal thêm số lượng
+  const [productToAddQuantity, setProductToAddQuantity] = useState(null); // Thêm trạng thái cho sản phẩm cần thêm số lượng
 
   const itemsPerPage = 10;
 
@@ -41,6 +45,11 @@ const Inventory = () => {
   const handleDeleteClick = (product) => {
     setProductToDelete(product);  // Lưu sản phẩm cần xóa
     setShowDeleteModal(true);     // Hiển thị modal xác nhận
+  };
+
+  const handleAddQuantityClick = (product) => {
+    setProductToAddQuantity(product);  // Lưu sản phẩm cần thêm số lượng
+    setShowAddQuantityModal(true);     // Hiển thị modal thêm số lượng
   };
 
   const fetchProducts = async () => {
@@ -83,6 +92,44 @@ const Inventory = () => {
         setShowDeleteModal(false);
         setProductToDelete(null);
       }
+  };
+
+  const handleAddQuantity = async (productId, quantity) => {
+    // Lấy token từ sessionStorage
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      toast.error("Lỗi: Không tìm thấy token! ❌");
+      return;
+    }
+
+    try {
+      const decoded = jwtDecode(token);
+      
+      const product = products.find(p => p.productid === productId);
+      const updatedProduct = { ...product, quantity: product.quantity + quantity };
+      setOrderData({
+        employee_name: decoded.fullname,
+        employee_id: decoded.username,
+        role: decoded.role,
+        productid: product.productid,
+        productname: product.productname,
+        quantity: quantity,
+        timestamp: new Date().toISOString(),
+        type: "Add"
+      });
+      await saveOrder(orderData);
+      await updateProduct(productId, updatedProduct);
+      activityLogger(`Thêm ${quantity} sản phẩm vào ${productId} thành công`);
+
+      toast.success("Thêm số lượng sản phẩm thành công!");
+      fetchProducts();
+    } catch (err) {
+      toast.error("Thêm số lượng thất bại! Vui lòng thử lại.");
+      console.log(orderData);
+    } finally {
+      setShowAddQuantityModal(false);
+      setProductToAddQuantity(null);
+    }
   };
 
   const filteredProducts = products.filter((product) => {
@@ -187,9 +234,17 @@ const Inventory = () => {
                           <Button
                             variant="danger"
                             size="sm"
+                            className="me-2"
                             onClick={() => handleDeleteClick(product)}
                           >
                             🗑️ Xóa
+                          </Button>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => handleAddQuantityClick(product)}
+                          >
+                            ➕ Thêm
                           </Button>
                         </td>
                       )}
@@ -231,6 +286,15 @@ const Inventory = () => {
           onProductUpdated={fetchProducts}
           initialData={editingProduct}
           suppliers={suppliers}
+        />
+      )}
+      {/* Modal thêm số lượng */}
+      {productToAddQuantity && (
+        <AddProductModal
+          show={showAddQuantityModal}
+          onHide={() => setShowAddQuantityModal(false)}
+          onAddQuantity={handleAddQuantity}
+          product={productToAddQuantity}
         />
       )}
       {/* Modal xác nhận xóa */}
