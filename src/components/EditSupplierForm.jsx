@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Modal, Button, Form, Spinner } from "react-bootstrap";
 import { updateSupplier } from "../api/warehouseAPI";
 import { toast } from "react-toastify";
+import { activityLogger } from "../utils/activityLogger";
 
 const EditSupplierForm = ({ show, onHide, onSupplierUpdated, initialData }) => {
   const [formData, setFormData] = useState({
@@ -32,8 +33,10 @@ const EditSupplierForm = ({ show, onHide, onSupplierUpdated, initialData }) => {
       onSupplierUpdated(); // Refresh danh sách nhà cung cấp
       onHide(); // Đóng modal
       toast.success("Cập nhật nhà cung cấp thành công!");
+      activityLogger(`Sửa nhà cung cấp ${formData.suppliername} thành công`);
     } catch (err) {
       const errorMessage = err.response?.data?.error || "Cập nhật thất bại! Lỗi không xác định.";
+      activityLogger(`Sửa nhà cung cấp ${formData.suppliername} thất bại`);
       toast.error(errorMessage);
     } finally {
       setLoading(false);

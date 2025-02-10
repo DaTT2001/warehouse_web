@@ -7,6 +7,7 @@ import ProductForm from "../components/ProductForm";
 import EditProductForm from "../components/EditProductForm"; // Form chỉnh sửa sản phẩm
 import { toast } from "react-toastify";
 import ConfirmationModal from "../components/ConfirmationModal";
+import { activityLogger } from "../utils/activityLogger";
 
 
 const Inventory = () => {
@@ -72,6 +73,7 @@ const Inventory = () => {
     setIsDeleting(true) 
       try {
         await deleteProduct(productToDelete.productid);
+        activityLogger(`Xóa sản phẩm ${productToDelete.productid} thành công`);
         toast.success("Xóa sản phẩm thành công!");
         fetchProducts();
       } catch (err) {

@@ -5,6 +5,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import { ToastContainer } from "react-toastify";
 import "./App.css"
+import { useCallback } from "react";
 
 // Import các trang
 import Login from './pages/Login';
@@ -30,10 +31,15 @@ const Layout = ({ children }) => {
 };
 
 function App() {
+  const handleSessionExpire = useCallback(() => {
+    console.log("Phiên làm việc đã hết hạn!");
+    sessionStorage.removeItem("token");
+    window.location.href = "/login"; // Điều hướng về login
+  }, []);
   return (
-    <>
-      <SessionTimer/>
+    <> 
       <Router>
+      <SessionTimer onSessionExpire={handleSessionExpire}/>
         <Layout>
           <Routes>
             <Route path="/login" element={<Login />} /> 

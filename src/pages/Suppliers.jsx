@@ -8,6 +8,7 @@ import useActivityLogger from "../hooks/useActivityLogger";
 import { getUserRole } from "../utils/auth";
 import SupplierForm from "../components/SupplierForm";
 import EditSupplierForm from "../components/EditSupplierForm";
+import { activityLogger } from "../utils/activityLogger";
 
 
 const Suppliers = () => {
@@ -85,9 +86,11 @@ const Suppliers = () => {
       await deleteSupplier(supplierToDelete.supplierid);
       setSuppliers(suppliers.filter((s) => s.supplierid !== supplierToDelete.supplierid));
       toast.success("Xóa nhà cung cấp thành công!");
+      activityLogger(`Xóa nhà cung cấp ${supplierToDelete.suppliername} thành công`);
       setShowDeleteModal(false);
     } catch (err) {
       const errorMessage = err.response?.data?.error || "Xóa thất bại! Lỗi không xác định.";
+      activityLogger(`Xóa nhà cung cấp ${supplierToDelete.suppliername} thất bại`);
       toast.error(errorMessage);
       setShowDeleteModal(false); // Đóng modal ngay cả khi lỗi xảy ra
     } finally {

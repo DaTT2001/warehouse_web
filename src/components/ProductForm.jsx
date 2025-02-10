@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Modal, Button, Form, Spinner } from "react-bootstrap";
 import { addProduct } from "../api/warehouseAPI";
 import { toast } from "react-toastify";
+import { activityLogger } from "../utils/activityLogger";
 
 const ProductForm = ({ show, onHide, onProductAdded, suppliers }) => {
   const [formData, setFormData] = useState({
@@ -36,10 +37,12 @@ const ProductForm = ({ show, onHide, onProductAdded, suppliers }) => {
         quantity: "",
         supplierid: "",
       });
+      activityLogger(`Thêm sản phẩm ${formData.productid} thành công`);
     } catch (err) {
       const errorMessage =
-        err.response?.data?.error || "Thêm thất bại! Lỗi không xác định.";
+      err.response?.data?.error || "Thêm thất bại! Lỗi không xác định.";
       toast.error(errorMessage);
+      activityLogger("Thêm sản phẩm mới thất bại");
     } finally {
       setLoading(false);
     }

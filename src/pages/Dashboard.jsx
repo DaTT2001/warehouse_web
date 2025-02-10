@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, Button, Row, Col, Table, Container, Alert } from "react-bootstrap";
+import { Card, Button, Row, Col, Container, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { getProducts, getSuppliers } from "../api/warehouseAPI";
 import { Line } from "react-chartjs-2";
@@ -118,7 +118,7 @@ const Dashboard = () => {
                   Quản lý kho
                 </Button>
                 <Button variant="warning" size="lg" onClick={() => setShowTakeModal(true)}>
-                  Lấy hàng
+                  Xuất kho
                 </Button>
               </div>
             </Card.Body>
@@ -142,43 +142,6 @@ const Dashboard = () => {
                 <div style={{ minWidth: "1200px", height: "400px" }}> {/* Min-width giúp tạo thanh cuộn */}
                   <Line data={chartData} options={chartOptions} />
                 </div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      <Row>
-        <Col>
-          <Card>
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center">
-                <Card.Title className="mb-0">Báo cáo kho</Card.Title>
-                <a href="/reports" className="text-primary fw-bold">
-                  Chi tiết →
-                </a>
-              </div>
-              <div style={{ overflowX: "auto" }}>
-                <Table striped bordered hover>
-                  <thead>
-                    <tr>
-                      <th>Ngày</th>
-                      <th>Sản phẩm</th>
-                      <th>Nhập</th>
-                      <th>Xuất</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {/* {reports.map((report, index) => (
-                      <tr key={index}>
-                        <td>{report.date}</td>
-                        <td>{abbreviateName(report.product)}</td>
-                        <td>{report.in}</td>
-                        <td>{report.out}</td>
-                      </tr>
-                    ))} */}
-                  </tbody>
-                </Table>
               </div>
             </Card.Body>
           </Card>
