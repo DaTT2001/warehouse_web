@@ -10,7 +10,6 @@ import SupplierForm from "../components/SupplierForm";
 import EditSupplierForm from "../components/EditSupplierForm";
 import { activityLogger } from "../utils/activityLogger";
 
-
 const Suppliers = () => {
   useActivityLogger("Truy cập trang nhà cung cấp");
   const [suppliers, setSuppliers] = useState([]);
@@ -31,7 +30,6 @@ const Suppliers = () => {
     setEditingSupplier(supplier);
     setShowEditModal(true);
   };
-  
 
   useEffect(() => {
     setRole(getUserRole()); // Lấy quyền khi component mount
@@ -120,7 +118,10 @@ const Suppliers = () => {
             type="text"
             placeholder="🔍 Tìm theo tên hoặc người liên hệ..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
           />
         </Col>
         <Col md={4} className="text-end">

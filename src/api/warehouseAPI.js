@@ -1,161 +1,66 @@
 import axios from "axios";
 import { API_URL } from "../utils/constants";
 
-export const getProducts = async () => {
+const getToken = () => sessionStorage.getItem("token");
+
+// Chuyển timestamp về UTC+7 và format "yyyy-MM-dd HH:mm:ss"
+const convertToUTC7 = (data) => {
+  if (!data) return data;
+
+  const convertTime = (val) => {
+    if (typeof val === "string" && val.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)) {
+      const date = new Date(val);
+      date.setHours(date.getHours() + 7); // Chuyển sang UTC+7
+      return date.toISOString().replace("T", " ").substring(0, 19); // Format "yyyy-MM-dd HH:mm:ss"
+    }
+    return val;
+  };
+
+  if (Array.isArray(data)) {
+    return data.map(item => convertToUTC7(item));
+  } else if (typeof data === "object") {
+    return Object.fromEntries(Object.entries(data).map(([key, val]) => [key, convertTime(val)]));
+  }
+  return data;
+};
+
+// Hàm request chung
+const request = async (method, endpoint, data = null, auth = true) => {
   try {
-    const token = sessionStorage.getItem("token");
-    const response = await axios.get(`${API_URL}/products`, {
-      headers: {
-        Authorization: `Bearer ${token}`, // Gửi token trong header
-      },
-    });
-    return response.data;
+    const headers = auth ? { Authorization: `Bearer ${getToken()}` } : {};
+    const response = await axios({ method, url: `${API_URL}${endpoint}`, data, headers });
+    return convertToUTC7(response.data);
   } catch (error) {
-    console.error("Lấy danh sách sản phẩm thất bại:", error);
-    throw new Error("Không thể tải danh sách sản phẩm!");
+    console.error(error.response?.data?.error || error.message);
+    throw new Error("Lỗi khi thực hiện request!");
   }
 };
 
-export const addProduct = async (productData) => {
-  try {
-    const token = sessionStorage.getItem("token");
-    const response = await axios.post(`${API_URL}/products`, productData, {
-      headers: {
-        Authorization: `Bearer ${token}`, // Gửi token trong header
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error(error.response?.data.error || error.message);
-    throw error; // Ném lỗi để xử lý ở frontend
-  }
-};
+// API Calls
+export const getProducts = () => request("get", "/products");
 
-export const deleteProduct = async (productID) => {
-  try {
-    const token = sessionStorage.getItem("token"); // Lấy token từ sessionStorage
+export const addProduct = (productData) => request("post", "/products", productData);
 
-    const response = await axios.delete(`${API_URL}/products/${productID}`, {
-      headers: {
-        Authorization: `Bearer ${token}`, // Gửi token trong header
-      },
-    });
+export const deleteProduct = (productID) => request("delete", `/products/${productID}`);
 
-    return response.data;
-  } catch (error) {
-    console.error("API lỗi khi xóa sản phẩm:", error.response?.data || error.message);
-    throw error; // Quan trọng: ném lỗi ra ngoài để catch được
-  }
-};
+export const updateProduct = (productID, updatedProduct) => request("put", `/products/${productID}`, updatedProduct);
 
-export const updateProduct = async (productid, updatedProduct) => {
-  try {
-    const token = sessionStorage.getItem("token");
-    const response = await axios.put(`${API_URL}/products/${productid}`, updatedProduct, {
-      headers: {
-        Authorization: `Bearer ${token}`, // Gửi token trong header
-      },
-    });
+export const getLogs = () => request("get", "/logs", null, false);
 
-    return response.data; // Trả về dữ liệu cập nhật thành công
-  } catch (error) {
-    console.error("Lỗi khi cập nhật sản phẩm:", error.response?.data.error || error.message);
-    return null; // Trả về null để frontend có thể kiểm tra lỗi
-  }
-};
+export const getReports = () => request("get", "/reports");
 
+export const getSuppliers = () => request("get", "/suppliers");
 
-export const getLogs = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/logs`);
-    return response.data;
-  } catch (error) {
-    console.error("Lấy logs thất bại:", error);
-    throw new Error("Không thể tải logs!");
-  }
-};
+export const deleteSupplier = (supplierId) => request("delete", `/suppliers/${supplierId}`);
 
-export const getReports = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/reports`);
-    return response.data;
-  } catch (error) {
-    console.error("Lấy báo cáo thất bại:", error);
-    throw new Error("Không thể tải báo cáo!");
-  }
-};
+export const addSupplier = (supplierData) => request("post", "/suppliers", supplierData);
 
-export const getSuppliers = async () => {
-  try {
-    const token = sessionStorage.getItem("token");
-    const response = await axios.get(`${API_URL}/suppliers`, {
-      headers: {
-        Authorization: `Bearer ${token}`, // Gửi token trong header
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Lấy danh sách nhà cung cấp thất bại:", error);
-    throw new Error("Không thể tải danh sách nhà cung cấp!");
-  }
-};
+export const updateSupplier = (supplierId, supplierData) => request("put", `/suppliers/${supplierId}`, supplierData);
 
-export const deleteSupplier = async (supplierId) => {
-  try {
-    const token = sessionStorage.getItem("token")
-    const response = await axios.delete(`${API_URL}/suppliers/${supplierId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`, // Gửi token trong header
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error("API lỗi khi xóa nhà cung cấp:", error.response?.data || error.message);
-    throw error; // Quan trọng: ném lỗi ra ngoài để catch được
-  }
-};
+export const saveOrder = (orderData) => request("post", "/orders", orderData);
 
-export const addSupplier = async (supplierData) => {
-  try {
-    const token = sessionStorage.getItem("token")
-    const response = await axios.post(`${API_URL}/suppliers`, supplierData, {
-      headers: {
-        Authorization: `Bearer ${token}`, // Gửi token trong header
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error(error.response?.data.error || error.message);
-    throw error; // Ném lỗi để xử lý ở frontend
-  }
-};
+export const getOrders = () => request("get", "/orders");
 
-export const updateSupplier = async (supplierid, supplierData) => {
-  try {
-    const token = sessionStorage.getItem("token");
-    const response = await axios.put(`${API_URL}/suppliers/${supplierid}`, supplierData, {
-      headers: {
-        Authorization: `Bearer ${token}`, // Gửi token trong header
-      },
-    });
-    console.log(`${API_URL}/suppliers/${supplierid}`)
-    return response.data;
-  } catch (error) {
-    console.error(error.response?.data.error || error.message);
-    throw error; // Ném lỗi để xử lý ở frontend
-  }
-};
+export const getProductWithID = (productID) => request("get", `/products/${productID}`);
 
-export const saveOrder = async (orderData) => {
-  try {
-    const response = await axios.post(`${API_URL}/orders`, orderData, {
-      headers: {
-        Authorization: `Bearer ${sessionStorage.getItem("token")}`, // Gửi token trong header
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error("❌ Lỗi khi lưu đơn hàng:", error.response?.data?.error || error.message);
-    throw error;
-  }
-};
+export const deleteOrder = (orderId) => request("delete", `/orders/${orderId}`);

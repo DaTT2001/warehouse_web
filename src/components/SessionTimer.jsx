@@ -32,7 +32,7 @@ const SessionTimer = () => {
       const decoded = jwtDecode(token);
       const exp = decoded.exp * 1000;
       const now = Date.now();
-      const remainingTime = Math.max(0, Math.floor((exp - now) / 1000));
+      const remainingTime = Math.max(0, Math.floor((exp - now) / 1000) - 90);
 
       if (remainingTime === 0) {
         handleSessionExpire();

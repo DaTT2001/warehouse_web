@@ -166,11 +166,14 @@ const Inventory = () => {
             type="text"
             placeholder="🔍 Tìm theo mã hoặc tên sản phẩm..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value)
+              setCurrentPage(1)
+            }}
           />
         </Col>
         <Col md={4}>
-          <Form.Select value={selectedSupplier} onChange={(e) => setSelectedSupplier(e.target.value)}>
+          <Form.Select value={selectedSupplier} onChange={(e) => {setSelectedSupplier(e.target.value); setCurrentPage(1)}}>
             <option value="">Tất cả nhà cung cấp</option>
             {suppliers.map((s) => (
               <option key={s.supplierid} value={s.supplierid}>
@@ -180,12 +183,18 @@ const Inventory = () => {
           </Form.Select>
         </Col>
         <Col md={4}>
-          <Form.Select value={stockFilter} onChange={(e) => setStockFilter(e.target.value)}>
-            <option value="">Tất cả số lượng</option>
-            <option value="low">Tồn kho thấp (&lt;10)</option>
-            <option value="high">Tồn kho cao (&ge;10)</option>
-            <option value="restock">Cần bổ sung (&lt;=5)</option>
-          </Form.Select>
+        <Form.Select
+          value={stockFilter}
+          onChange={(e) => {
+            setStockFilter(e.target.value);
+            setCurrentPage(1); // Reset pagination
+          }}
+        >
+          <option value="">Tất cả số lượng</option>
+          <option value="low">Tồn kho thấp (&lt;10)</option>
+          <option value="high">Tồn kho cao (&ge;10)</option>
+          <option value="restock">Cần bổ sung (&lt;=5)</option>
+        </Form.Select>
         </Col>
       </Row>
 

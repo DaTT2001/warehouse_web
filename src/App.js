@@ -16,6 +16,7 @@ import PrivateRoute from './components/PrivateRoute';
 import Suppliers from './pages/Suppliers';
 import LogsPage from './pages/LogsPage';
 import SessionTimer from './components/SessionTimer';
+import Reports from './pages/Reports';
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -47,6 +48,7 @@ function App() {
             <Route path="/inventory" element={<PrivateRoute element={<Inventory />} />} />
             <Route path="/logs" element={<PrivateRoute element={<LogsPage />} />} />
             <Route path="/suppliers" element={<PrivateRoute element={<Suppliers />} />} />
+            <Route path="/reports" element={<PrivateRoute element={<Reports />} />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>
