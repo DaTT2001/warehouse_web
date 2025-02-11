@@ -39,7 +39,7 @@ function App() {
   return (
     <> 
       <Router>
-      <SessionTimer onSessionExpire={handleSessionExpire}/>
+        <SessionTimer onSessionExpire={handleSessionExpire}/>
         <Layout>
           <Routes>
             <Route path="/login" element={<Login />} /> 
