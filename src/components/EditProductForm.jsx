@@ -1,3 +1,4 @@
+// src/components/EditProductForm.jsx
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form, Spinner } from "react-bootstrap";
 import { updateProduct } from "../api/warehouseAPI";
@@ -56,7 +57,7 @@ const EditProductForm = ({ show, onHide, onProductUpdated, initialData, supplier
           <Form.Group className="mb-3">
             <Form.Label>ID Sản Phẩm</Form.Label>
             <Form.Control
-              type="number"
+              type="text"
               name="productid"
               value={formData.productid}
               disabled
@@ -101,31 +102,22 @@ const EditProductForm = ({ show, onHide, onProductUpdated, initialData, supplier
               onChange={handleChange}
             />
           </Form.Group>
-          {/* <Form.Group className="mb-3">
+          <Form.Group className="mb-3">
             <Form.Label>Nhà Cung Cấp</Form.Label>
-            <Form.Control
-              type="number"
+            <Form.Select
               name="supplierid"
               value={formData.supplierid}
               onChange={handleChange}
-            />
-          </Form.Group> */}
-            <Form.Group className="mb-3">
-                <Form.Label>Nhà Cung Cấp</Form.Label>
-                <Form.Select
-                    name="supplierid"
-                    value={formData.supplierid}
-                    onChange={handleChange}
-                    required
-                >
-                    <option value="">-- Chọn Nhà Cung Cấp --</option>
-                    {suppliers.map((supplier) => (
-                    <option key={supplier.supplierid} value={supplier.supplierid}>
-                        {supplier.suppliername}
-                    </option>
-                    ))}
-                </Form.Select>
-            </Form.Group>
+              required
+            >
+              <option value="">-- Chọn Nhà Cung Cấp --</option>
+              {suppliers.map((supplier) => (
+                <option key={supplier.supplierid} value={supplier.supplierid}>
+                  {supplier.suppliername}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
 
           <Modal.Footer>
             <Button variant="secondary" onClick={onHide} disabled={loading}>

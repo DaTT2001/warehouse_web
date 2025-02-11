@@ -40,7 +40,7 @@ const ProductForm = ({ show, onHide, onProductAdded, suppliers }) => {
       activityLogger(`Thêm sản phẩm ${formData.productid} thành công`);
     } catch (err) {
       const errorMessage =
-      err.response?.data?.error || "Thêm thất bại! Lỗi không xác định.";
+        err.response?.data?.error || "Thêm thất bại! Lỗi không xác định.";
       toast.error(errorMessage);
       activityLogger("Thêm sản phẩm mới thất bại");
     } finally {
@@ -48,8 +48,22 @@ const ProductForm = ({ show, onHide, onProductAdded, suppliers }) => {
     }
   };
 
+  const handleModalHide = () => {
+    if (!loading) {
+      setFormData({
+        productid: "",
+        productname: "",
+        unit: "",
+        price: "",
+        quantity: "",
+        supplierid: "",
+      });
+      onHide();
+    }
+  };
+
   return (
-    <Modal show={show} onHide={!loading ? onHide : null} centered>
+    <Modal show={show} onHide={handleModalHide} centered>
       <Modal.Header closeButton={!loading}>
         <Modal.Title>➕ Thêm Sản Phẩm</Modal.Title>
       </Modal.Header>
@@ -58,7 +72,7 @@ const ProductForm = ({ show, onHide, onProductAdded, suppliers }) => {
           <Form.Group className="mb-3">
             <Form.Label>ID Sản Phẩm</Form.Label>
             <Form.Control
-              type="number"
+              type="text"
               name="productid"
               value={formData.productid}
               onChange={handleChange}
@@ -121,7 +135,7 @@ const ProductForm = ({ show, onHide, onProductAdded, suppliers }) => {
             </Form.Select>
           </Form.Group>
           <Modal.Footer>
-            <Button variant="secondary" onClick={onHide} disabled={loading}>
+            <Button variant="secondary" onClick={handleModalHide} disabled={loading}>
               ❌ Hủy
             </Button>
             <Button variant="primary" type="submit" disabled={loading}>

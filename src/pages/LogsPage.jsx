@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { Table, Container, Spinner, Alert, Pagination } from "react-bootstrap";
-// import useActivityLogger from "../hooks/useActivityLogger";
+import { Table, Container, Spinner, Alert, Pagination, Form, Row, Col, ButtonGroup, DropdownButton, Dropdown } from "react-bootstrap";
 import { getLogs } from "../api/warehouseAPI"; // Đảm bảo import đúng file API
 
 const LogsPage = () => {
-  // useActivityLogger("Truy cập trang nhật ký");
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [userFilter, setUserFilter] = useState(""); // Thêm trạng thái cho bộ lọc người dùng
+  const [sortOrder, setSortOrder] = useState("desc"); // Thêm trạng thái cho sắp xếp thời gian
+  const [startDate, setStartDate] = useState(""); // Thêm trạng thái cho ngày bắt đầu
+  const [endDate, setEndDate] = useState(""); // Thêm trạng thái cho ngày kết thúc
   const logsPerPage = 20;
 
+  // Lấy dữ liệu logs từ API
   useEffect(() => {
     const fetchLogs = async () => {
       try {
@@ -26,11 +29,34 @@ const LogsPage = () => {
     fetchLogs();
   }, []);
 
+  // Lọc logs theo người dùng và khoảng thời gian
+  const filteredLogs = logs.filter(log => {
+    const logDate = new Date(log.timestamp);
+    const isUserMatch = log.username.toLowerCase().includes(userFilter.toLowerCase());
+    const isStartDateMatch = startDate ? logDate >= new Date(startDate) : true;
+    const isEndDateMatch = endDate ? logDate < new Date(new Date(endDate).setDate(new Date(endDate).getDate() + 1)) : true;
+    return isUserMatch && isStartDateMatch && isEndDateMatch;
+  });
+
+  // Sắp xếp logs theo thời gian
+  const sortedLogs = filteredLogs.sort((a, b) => {
+    if (sortOrder === "asc") {
+      return new Date(a.timestamp) - new Date(b.timestamp);
+    } else {
+      return new Date(b.timestamp) - new Date(a.timestamp);
+    }
+  });
+
   // Tính toán phân trang
   const indexOfLastLog = currentPage * logsPerPage;
   const indexOfFirstLog = indexOfLastLog - logsPerPage;
-  const currentLogs = logs.slice(indexOfFirstLog, indexOfLastLog);
-  const totalPages = Math.ceil(logs.length / logsPerPage);
+  const currentLogs = sortedLogs.slice(indexOfFirstLog, indexOfLastLog);
+  const totalPages = Math.ceil(sortedLogs.length / logsPerPage);
+
+  // Đặt lại trang hiện tại về 1 khi thay đổi bộ lọc ngày
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [startDate, endDate]);
 
   return (
     <Container className="mt-4">
@@ -41,6 +67,56 @@ const LogsPage = () => {
 
       {!loading && !error && (
         <>
+          <Row className="mb-3">
+            <Col md={3}>
+              <Form.Control
+                type="text"
+                placeholder="🔍 Lọc theo người dùng..."
+                value={userFilter}
+                onChange={(e) => setUserFilter(e.target.value)}
+              />
+            </Col>
+            <Col md={3}>
+              <Form.Control
+                type="date"
+                placeholder="Từ ngày"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </Col>
+            <Col md={3}>
+              <Form.Control
+                type="date"
+                placeholder="Đến ngày"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </Col>
+            <Col md={3} className="d-flex justify-content-end">
+              <DropdownButton
+                as={ButtonGroup}
+                title={`Sắp xếp theo thời gian ${sortOrder === "asc" ? "⬆️" : "⬇️"}`}
+                id="bg-nested-dropdown"
+                variant="secondary"
+              >
+                <Dropdown.Item
+                  eventKey="1"
+                  active={sortOrder === "asc"}
+                  onClick={() => setSortOrder("asc")}
+                >
+                  ⬆️ Tăng dần
+                </Dropdown.Item>
+                <Dropdown.Item
+                  eventKey="2"
+                  active={sortOrder === "desc"}
+                  onClick={() => setSortOrder("desc")}
+                >
+                  ⬇️ Giảm dần
+                </Dropdown.Item>
+              </DropdownButton>
+            </Col>
+          </Row>
+
           <Table striped bordered hover>
             <thead>
               <tr>

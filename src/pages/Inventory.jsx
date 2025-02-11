@@ -26,7 +26,6 @@ const Inventory = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [orderData, setOrderData] = useState(null);
   const [productToDelete, setProductToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showAddQuantityModal, setShowAddQuantityModal] = useState(false); // Thêm trạng thái cho modal thêm số lượng
@@ -49,6 +48,7 @@ const Inventory = () => {
 
   const handleAddQuantityClick = (product) => {
     setProductToAddQuantity(product);  // Lưu sản phẩm cần thêm số lượng
+    console.log(product);
     setShowAddQuantityModal(true);     // Hiển thị modal thêm số lượng
   };
 
@@ -69,7 +69,7 @@ const Inventory = () => {
       try {
         const data = await getSuppliers();
         setSuppliers(data);
-        console.log(data)
+        console.log(data);
       } catch (err) {
         setError("Không thể tải danh sách nhà cung cấp!");
       }
@@ -79,23 +79,22 @@ const Inventory = () => {
 
   const handleDelete = async () => {
     if (!productToDelete) return;
-    setIsDeleting(true) 
-      try {
-        await deleteProduct(productToDelete.productid);
-        activityLogger(`Xóa sản phẩm ${productToDelete.productid} thành công`);
-        toast.success("Xóa sản phẩm thành công!");
-        fetchProducts();
-      } catch (err) {
-        toast.error("Xóa thất bại! Vui lòng thử lại.");
-      } finally {
-        setIsDeleting(false);
-        setShowDeleteModal(false);
-        setProductToDelete(null);
-      }
+    setIsDeleting(true);
+    try {
+      await deleteProduct(productToDelete.productid);
+      activityLogger(`Xóa sản phẩm ${productToDelete.productid} thành công`);
+      toast.success("Xóa sản phẩm thành công!");
+      fetchProducts();
+    } catch (err) {
+      toast.error("Xóa thất bại! Vui lòng thử lại.");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+      setProductToDelete(null);
+    }
   };
 
   const handleAddQuantity = async (productId, quantity) => {
-    // Lấy token từ sessionStorage
     const token = sessionStorage.getItem("token");
     if (!token) {
       toast.error("Lỗi: Không tìm thấy token! ❌");
@@ -104,10 +103,10 @@ const Inventory = () => {
 
     try {
       const decoded = jwtDecode(token);
-      
       const product = products.find(p => p.productid === productId);
       const updatedProduct = { ...product, quantity: product.quantity + quantity };
-      setOrderData({
+
+      const newOrderData = {
         employee_name: decoded.fullname,
         employee_id: decoded.username,
         role: decoded.role,
@@ -116,8 +115,9 @@ const Inventory = () => {
         quantity: quantity,
         timestamp: new Date().toISOString(),
         type: "Add"
-      });
-      await saveOrder(orderData);
+      };
+
+      await saveOrder(newOrderData);
       await updateProduct(productId, updatedProduct);
       activityLogger(`Thêm ${quantity} sản phẩm vào ${productId} thành công`);
 
@@ -125,7 +125,7 @@ const Inventory = () => {
       fetchProducts();
     } catch (err) {
       toast.error("Thêm số lượng thất bại! Vui lòng thử lại.");
-      console.log(orderData);
+      console.log(err);
     } finally {
       setShowAddQuantityModal(false);
       setProductToAddQuantity(null);
