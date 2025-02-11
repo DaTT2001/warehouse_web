@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { deleteOrder, getOrders, getProductWithID, updateProduct } from '../api/warehouseAPI';
 import { Table, Container, Form, Row, Col, Button, Alert, Spinner, Pagination } from 'react-bootstrap';
 import { toast } from 'react-toastify';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 // Hàm chuyển timestamp về UTC+7 và format "yyyy-MM-dd HH:mm:ss"
 const formatTimestamp = (timestamp) => {
@@ -18,7 +20,9 @@ const Reports = () => {
     name: '',
     startDate: '',
     endDate: '',
-    productId: ''
+    productId: '',
+    employee_name: '',
+    employee_id: ''
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -87,9 +91,31 @@ const Reports = () => {
     }
   };
 
+  const handleExportExcel = () => {
+    // Tạo dữ liệu xuất ra Excel từ filteredReports
+    const exportData = filteredReports.map(report => ({
+      ID: report.id,
+      "Product ID": report.productid,
+      "Product Name": report.productname,
+      Type: report.type,
+      Quantity: report.quantity,
+      Date: report.timestamp
+    }));
+
+    // Tạo worksheet từ dữ liệu
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    // Tạo workbook mới
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Reports");
+    // Xuất file Excel
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const dataBlob = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(dataBlob, `Reports_${new Date().toISOString().substring(0,19)}.xlsx`);
+  };
+
   // Filter reports based on filter criteria
   const filteredReports = reports.filter((report) => {
-    const { type, name, startDate, endDate, productId } = filter;
+    const { type, name, startDate, endDate, productId, employee_name, employee_id } = filter;
     const reportDate = new Date(report.timestamp);
     const start = startDate ? new Date(startDate + "T00:00:00") : null;
     const end = endDate ? new Date(endDate + "T23:59:59") : null;
@@ -99,7 +125,9 @@ const Reports = () => {
       (!name || report.productname.toLowerCase().includes(name.toLowerCase())) &&
       (!start || reportDate >= start) &&
       (!end || reportDate <= end) &&
-      (!productId || report.productid.toString() === productId)
+      (!productId || report.productid.toString().includes(productId)) &&
+      (!employee_name || report.employee_name.toLowerCase().includes(employee_name.toLowerCase())) &&
+      (!employee_id || report.employee_id.toString().includes(employee_id))
     );
   });
 
@@ -113,7 +141,7 @@ const Reports = () => {
     <Container className="mt-4">
       <h1>📊 Báo cáo</h1>
       <Row className="mb-3 d-flex justify-content-between">
-        <Col md={2}>
+        <Col md={1}>
           <Form.Select name="type" value={filter.type} onChange={handleFilterChange}>
             <option value="">Tất cả loại</option>
             <option value="Add">Add</option>
@@ -136,7 +164,16 @@ const Reports = () => {
             onChange={handleFilterChange}
           />
         </Col>
-        <Col md={4}>
+        <Col md={2}>
+          <Form.Control
+            type="text"
+            placeholder="🔍 Tìm theo tên nhân viên..."
+            name="employee_name"
+            value={filter.employee_name}
+            onChange={handleFilterChange}
+          />
+        </Col>
+        <Col md={2}>
           <Form.Control
             type="text"
             placeholder="🔍 Tìm theo ID sản phẩm..."
@@ -144,6 +181,20 @@ const Reports = () => {
             value={filter.productId}
             onChange={handleFilterChange}
           />
+        </Col>
+        <Col md={2}>
+          <Form.Control
+            type="text"
+            placeholder="🔍 Tìm theo ID nhân viên..."
+            name="employee_id"
+            value={filter.employee_id}
+            onChange={handleFilterChange}
+          />
+        </Col>
+        <Col md={1} className="d-flex justify-content-end">
+          <Button variant="success" onClick={handleExportExcel}>
+            Xuất
+          </Button>
         </Col>
       </Row>
       {loading && <Spinner animation="border" />}
@@ -154,12 +205,14 @@ const Reports = () => {
           <Table striped bordered hover>
             <thead>
               <tr>
-                <th>ID</th>
+                <th>ID sản phẩm</th>
                 <th>Tên sản phẩm</th>
-                <th>Loại</th>
-                <th>Số lượng</th>
-                <th>Ngày</th>
+                <th>Nhân viên</th>
+                <th>Mã nhân viên</th>
                 <th>Hành động</th>
+                <th>Số lượng</th>
+                <th>Ngày thực hiện</th>
+                <th>Chức năng</th>
               </tr>
             </thead>
             <tbody>
@@ -173,6 +226,8 @@ const Reports = () => {
                     <tr key={report.id}>
                       <td>{report.productid}</td>
                       <td>{report.productname}</td>
+                      <td>{report.employee_name}</td>
+                      <td>{report.employee_id}</td>
                       <td>{report.type}</td>
                       <td>{report.quantity}</td>
                       <td>{report.timestamp}</td>
@@ -188,7 +243,7 @@ const Reports = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan="5" className="text-center">
+                  <td colSpan="8" className="text-center">
                     Không có dữ liệu.
                   </td>
                 </tr>
