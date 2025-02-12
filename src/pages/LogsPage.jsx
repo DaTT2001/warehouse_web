@@ -73,7 +73,10 @@ const LogsPage = () => {
                 type="text"
                 placeholder="🔍 Lọc theo người dùng..."
                 value={userFilter}
-                onChange={(e) => setUserFilter(e.target.value)}
+                onChange={(e) => {
+                  setUserFilter(e.target.value);
+                  setCurrentPage(1); // Reset pagination
+                }}
               />
             </Col>
             <Col md={3}>
@@ -81,7 +84,10 @@ const LogsPage = () => {
                 type="date"
                 placeholder="Từ ngày"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setCurrentPage(1); // Reset pagination
+                }}
               />
             </Col>
             <Col md={3}>
@@ -89,7 +95,10 @@ const LogsPage = () => {
                 type="date"
                 placeholder="Đến ngày"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setCurrentPage(1); // Reset pagination
+                }}
               />
             </Col>
             <Col md={3} className="d-flex justify-content-end">
@@ -102,21 +111,26 @@ const LogsPage = () => {
                 <Dropdown.Item
                   eventKey="1"
                   active={sortOrder === "asc"}
-                  onClick={() => setSortOrder("asc")}
+                  onClick={() => {
+                    setSortOrder("asc");
+                    setCurrentPage(1); // Reset pagination
+                  }}
                 >
                   ⬆️ Tăng dần
                 </Dropdown.Item>
                 <Dropdown.Item
                   eventKey="2"
                   active={sortOrder === "desc"}
-                  onClick={() => setSortOrder("desc")}
+                  onClick={() => {
+                    setSortOrder("desc");
+                    setCurrentPage(1); // Reset pagination
+                  }}
                 >
                   ⬇️ Giảm dần
                 </Dropdown.Item>
               </DropdownButton>
             </Col>
           </Row>
-
           <Table striped bordered hover>
             <thead>
               <tr>
