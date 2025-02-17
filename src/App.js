@@ -10,10 +10,10 @@ import { useCallback } from "react";
 // Import các trang
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import Inventory from './pages/Inventory';
+// import Inventory from './pages/Inventory';
 import NotFound from './pages/NotFound';
 import PrivateRoute from './components/PrivateRoute';
-import Suppliers from './pages/Suppliers';
+// import Suppliers from './pages/Suppliers';
 import LogsPage from './pages/LogsPage';
 import SessionTimer from './components/SessionTimer';
 import Reports from './pages/Reports';
@@ -49,7 +49,7 @@ function App() {
             {/* <Route path="/inventory" element={<PrivateRoute element={<Inventory />} />} /> */}
             <Route path="/inventory" element={<PrivateRoute element={<Warehouse />} />} />
             <Route path="/logs" element={<PrivateRoute element={<LogsPage />} />} />
-            <Route path="/suppliers" element={<PrivateRoute element={<Suppliers />} />} />
+            {/* <Route path="/suppliers" element={<PrivateRoute element={<Suppliers />} />} /> */}
             <Route path="/reports" element={<PrivateRoute element={<Reports />} />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

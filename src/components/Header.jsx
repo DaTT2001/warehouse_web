@@ -61,7 +61,7 @@ const Header = () => {
                 <Nav.Link as={NavLink} to="/inventory">📦 Kho hàng</Nav.Link>
                 <Nav.Link as={NavLink} to="/logs">📜 Nhật ký</Nav.Link>
                 <Nav.Link as={NavLink} to="/reports">📊 Báo cáo</Nav.Link>
-                <Nav.Link as={NavLink} to="/suppliers">🚚 Nhà cung cấp</Nav.Link>
+                {/* <Nav.Link as={NavLink} to="/suppliers">🚚 Nhà cung cấp</Nav.Link> */}
                 {/* Hiển thị ngày giờ */}
                 <div className="d-flex align-items-center justify-content-center flex-grow-1 gap-2">
                     <span className="text-light">
