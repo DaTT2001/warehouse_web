@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
 import { Modal, Button, Form, Table } from "react-bootstrap";
-import { updateProduct, saveOrder } from "../api/warehouseAPI";
+import { getInventoryByID, updateProductQuantity } from "../api/erpAPI";
+import { saveOrder } from "../api/warehouseAPI";
 import { toast } from "react-toastify";
 import { jwtDecode } from "jwt-decode";
 
-const TakeProductModal = ({ show, handleClose, inventory }) => {
+const TakeProductModal = ({ show, handleClose }) => {
   const [productID, setProductID] = useState("");
   const [quantity, setQuantity] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [orderData, setOrderData] = useState(null); // Lưu đơn hàng xem trước
   const [showPreview, setShowPreview] = useState(false); // Kiểm soát hiển thị modal preview
   const [countdown, setCountdown] = useState(300); // Đếm ngược 5 phút
-
-
+  const [isProductIDDisabled, setIsProductIDDisabled] = useState(false); // Trạng thái disable của ô nhập mã sản phẩm
 
   useEffect(() => {
     let timer;
@@ -29,19 +29,26 @@ const TakeProductModal = ({ show, handleClose, inventory }) => {
     return () => clearInterval(timer);
   }, [showPreview, countdown]);
 
-  const handleCheckProduct = () => {
-    const product = inventory.find((item) => String(item.productid) === String(productID));
-    if (product) {
-      setSelectedProduct(product);
-      setQuantity("");
-    } else {
-      toast.error("Mã sản phẩm không tồn tại!");
+  const handleCheckProduct = async () => {
+    try {
+      const product = await getInventoryByID(productID);
+      if (product) {
+        setSelectedProduct(product);
+        console.log(product);
+        
+        setQuantity("");
+        setIsProductIDDisabled(true); // Disable ô nhập mã sản phẩm
+      } else {
+        toast.error("Mã sản phẩm không tồn tại!");
+      }
+    } catch (error) {
+      toast.error("Lỗi khi lấy thông tin sản phẩm!");
     }
   };
 
   const handlePreviewOrder = () => {
     if (!selectedProduct || !quantity) return;
-    if (selectedProduct.quantity - parseInt(quantity) < 0) return;
+    if (selectedProduct.qty_available - parseInt(quantity) < 0) return;
 
     // Lấy token từ sessionStorage
     const token = sessionStorage.getItem("token");
@@ -57,12 +64,12 @@ const TakeProductModal = ({ show, handleClose, inventory }) => {
         employee_name: decoded.fullname,
         employee_id: decoded.username,
         role: decoded.role,
-        productid: selectedProduct.productid,
-        productname: selectedProduct.productname,
+        productid: selectedProduct.PRODUCT_ID,
+        productname: selectedProduct.PRODUCT_NAME,
         quantity: parseInt(quantity),
         timestamp: new Date().toISOString(),
         type: "Export",
-    });
+      });
 
       setCountdown(300); // Reset countdown
       setShowPreview(true); // Mở modal xem trước đơn hàng
@@ -77,30 +84,35 @@ const TakeProductModal = ({ show, handleClose, inventory }) => {
 
     try {
       // Cập nhật số lượng sản phẩm
-      const updatedProduct = {
-        productname: selectedProduct.productname,
-        unit: selectedProduct.unit,
-        price: selectedProduct.price,
-        quantity: selectedProduct.quantity - orderData.quantity,
-        supplierid: selectedProduct.supplierid,
-      };
-
-      await updateProduct(orderData.productid, updatedProduct);
+      await updateProductQuantity(orderData.productid, orderData.quantity);
       await saveOrder(orderData);
-
+      console.log(orderData);
+      
+      // await updateProductQuantity(orderData.productid, orderData.quantity);
       toast.success("Lấy hàng thành công! ✅");
 
       setShowPreview(false); // Đóng modal preview
       handleClose(); // Đóng modal chính
+      resetForm(); // Reset form
     } catch (error) {
       toast.error("Lỗi khi xử lý đơn xuất kho ❌");
     }
   };
 
+  const resetForm = () => {
+    setProductID("");
+    setQuantity("");
+    setSelectedProduct(null);
+    setOrderData(null);
+    setShowPreview(false);
+    setCountdown(300);
+    setIsProductIDDisabled(false);
+  };
+
   return (
     <>
       {/* Modal nhập thông tin lấy hàng */}
-      <Modal show={show} onHide={handleClose} centered>
+      <Modal show={show} onHide={() => { handleClose(); resetForm(); }} centered>
         <Modal.Header closeButton>
           <Modal.Title>Lấy hàng</Modal.Title>
         </Modal.Header>
@@ -112,6 +124,7 @@ const TakeProductModal = ({ show, handleClose, inventory }) => {
               value={productID}
               onChange={(e) => setProductID(e.target.value)}
               autoFocus
+              disabled={isProductIDDisabled} // Disable ô nhập mã sản phẩm nếu đã kiểm tra
             />
           </Form.Group>
           <Button variant="info" className="mb-3 w-100" onClick={handleCheckProduct} disabled={!productID}>
@@ -121,16 +134,25 @@ const TakeProductModal = ({ show, handleClose, inventory }) => {
           {selectedProduct && (
             <>
               <Form.Group className="mb-3">
-                <Form.Label>Số lượng lấy (Tối đa: {selectedProduct.quantity})</Form.Label>
+                <Form.Label>Số lượng lấy (Tối đa: {selectedProduct.QTY_AVAILABLE})</Form.Label>
                 <Form.Control
                   type="number"
                   min="1"
-                  max={selectedProduct.quantity}
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
                 />
+                {parseInt(quantity) > selectedProduct.QTY_AVAILABLE && (
+                  <Form.Text className="text-danger">
+                    Số lượng nhập vào vượt quá số lượng tối đa!
+                  </Form.Text>
+                )}
               </Form.Group>
-              <Button variant="warning" className="w-100" onClick={handlePreviewOrder} disabled={!quantity}>
+              <Button
+                variant="warning"
+                className="w-100"
+                onClick={handlePreviewOrder}
+                disabled={!quantity || parseInt(quantity) > selectedProduct.QTY_AVAILABLE}
+              >
                 🔍 Xem trước đơn hàng
               </Button>
             </>
@@ -139,7 +161,7 @@ const TakeProductModal = ({ show, handleClose, inventory }) => {
       </Modal>
 
       {/* Modal xem trước đơn hàng */}
-      <Modal show={showPreview} onHide={() => setShowPreview(false)} centered>
+      <Modal show={showPreview} onHide={() => { setShowPreview(false); resetForm(); }} centered>
         <Modal.Header closeButton>
           <Modal.Title>🔍 Xem trước đơn xuất kho</Modal.Title>
         </Modal.Header>
@@ -176,7 +198,7 @@ const TakeProductModal = ({ show, handleClose, inventory }) => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowPreview(false)}>❌ Hủy</Button>
+          <Button variant="secondary" onClick={() => { setShowPreview(false); resetForm(); handleClose() }}>❌ Hủy</Button>
           <Button variant="primary" onClick={handleConfirmOrder}>✅ Xác nhận</Button>
         </Modal.Footer>
       </Modal>

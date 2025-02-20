@@ -39,45 +39,6 @@ export const getInventory = async ({
   return requestInventory({ id, category, minQty, maxQty, search, page, limit });
 };
 
-// 🔹 Lấy thông tin chi tiết sản phẩm theo ID
-export const getInventoryByID = async (productID) => {
-  return requestInventory({ id: productID });
-};
-
-// 🔹 Cập nhật số lượng sản phẩm
-export const updateProductQuantity = async (productId, quantityToSubtract) => {
-  try {
-    const products = await getInventoryByID(productId);
-    if (!products || !products.data || products.data.length === 0) {
-      throw new Error("Không tìm thấy sản phẩm");
-    }
-
-    // Lọc sản phẩm có số lượng khác không
-    const validProduct = products.data.find(p => p.QTY_AVAILABLE > 0);
-
-    if (!validProduct) {
-      throw new Error("Tất cả các sản phẩm có số lượng bằng 0");
-    }
-
-    const currentQuantity = validProduct.QTY_AVAILABLE;
-    const newQuantity = currentQuantity - quantityToSubtract;
-
-    if (newQuantity < 0) {
-      throw new Error("Số lượng không đủ để trừ");
-    }
-
-    // Cập nhật số lượng sản phẩm
-    const response = await axios.put(`${API_ERP_URL}/inventory/${productId}`, {
-      qty_available: newQuantity,
-    });
-
-    return response.data;
-  } catch (error) {
-    console.error("❌ Lỗi cập nhật số lượng sản phẩm:", error.response?.data?.error || error.message);
-    throw new Error("Lỗi khi cập nhật số lượng sản phẩm!");
-  }
-};
-
 // 🔹 Lấy tổng số lượng sản phẩm
 export const getTotalQuantity = async () => {
   try {
@@ -90,5 +51,37 @@ export const getTotalQuantity = async () => {
   } catch (error) {
     console.error("❌ Lỗi lấy tổng số lượng sản phẩm:", error.response?.data?.error || error.message);
     throw new Error("Lỗi khi lấy tổng số lượng sản phẩm!");
+  }
+};
+
+// 🔹 Lấy thông tin chi tiết sản phẩm theo ID
+export const getInventoryByID = async (productID) => {
+  try {
+    const response = await axios.get(`${API_ERP_URL}/inventory/${productID}`);
+    if (response.data) {
+      return response.data;
+    } else {
+      throw new Error("Không tìm thấy sản phẩm");
+    }
+  } catch (error) {
+    console.error("❌ Lỗi lấy thông tin sản phẩm:", error.response?.data?.error || error.message);
+    throw new Error("Lỗi khi lấy thông tin sản phẩm!");
+  }
+};
+
+export const updateProductQuantity = async (productId, quantityToSubtract) => {
+  try {
+    const response = await axios.put(`${API_ERP_URL}/inventory/${productId}/qty`, {
+      qty_to_subtract: quantityToSubtract,
+    });
+
+    if (response.data) {
+      return response.data;
+    } else {
+      throw new Error("Không thể cập nhật số lượng sản phẩm");
+    }
+  } catch (error) {
+    console.error("❌ Lỗi cập nhật số lượng sản phẩm:", error.response?.data?.error || error.message);
+    throw new Error("Lỗi khi cập nhật số lượng sản phẩm!");
   }
 };
