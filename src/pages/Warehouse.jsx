@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Table, Container, Spinner, Alert, Pagination, Form, Row, Col } from "react-bootstrap";
 import { getInventory } from "../api/erpAPI";
+import useActivityLogger from "../hooks/useActivityLogger";
 
 const Warehouse = () => {
+  useActivityLogger("Truy cập trang kho hàng");
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState("");
   const [productId, setProductId] = useState("");
-  const [category, setCategory] = useState("");
   const [minQty, setMinQty] = useState("");
   const [maxQty, setMaxQty] = useState("");
   const [totalPages, setTotalPages] = useState(1);
@@ -19,7 +20,7 @@ const Warehouse = () => {
     const fetchInventory = async () => {
       setLoading(true);
       try {
-        const data = await getInventory({ id: productId, category, minQty, maxQty, search, page: currentPage, limit: itemsPerPage });
+        const data = await getInventory({ id: productId, minQty, maxQty, search, page: currentPage, limit: itemsPerPage });
         console.log("🔥 Dữ liệu tồn kho:", data.data);
         
         if (Array.isArray(data.data)) {
@@ -40,14 +41,14 @@ const Warehouse = () => {
     };
 
     fetchInventory();
-  }, [currentPage, search, productId, category, minQty, maxQty]);
+  }, [currentPage, search, productId, minQty, maxQty]);
 
   return (
     <Container className="mt-4">
       <h2>📦 Quản lý kho</h2>
 
       <Row className="mb-3">
-        <Col md={4}>
+        <Col md={3}>
           <Form.Control
             type="text"
             placeholder="🔍 Tìm theo tên sản phẩm hoặc mô tả..."
@@ -58,7 +59,7 @@ const Warehouse = () => {
             }}
           />
         </Col>
-        <Col md={4}>
+        <Col md={3}>
           <Form.Control
             type="text"
             placeholder="🔍 Tìm theo ID sản phẩm..."
@@ -69,18 +70,7 @@ const Warehouse = () => {
             }}
           />
         </Col>
-        <Col md={4}>
-          <Form.Control
-            type="text"
-            placeholder="🔍 Tìm theo danh mục..."
-            value={category}
-            onChange={(e) => {
-              setCategory(e.target.value);
-              setCurrentPage(1); // Reset pagination
-            }}
-          />
-        </Col>
-        <Col md={4}>
+        <Col md={3}>
           <Form.Control
             type="number"
             placeholder="🔍 Số lượng tối thiểu..."
@@ -91,7 +81,7 @@ const Warehouse = () => {
             }}
           />
         </Col>
-        <Col md={4}>
+        <Col md={3}>
           <Form.Control
             type="number"
             placeholder="🔍 Số lượng tối đa..."
@@ -116,7 +106,6 @@ const Warehouse = () => {
                 <th>Mã sản phẩm</th>
                 <th>Tên sản phẩm</th>
                 <th>Mô tả</th>
-                <th>Danh mục</th>
                 <th>Số lượng</th>
                 <th>Đơn vị</th>
                 <th>Mã kho</th>
@@ -130,7 +119,6 @@ const Warehouse = () => {
                     <td>{item.PRODUCT_ID}</td>
                     <td>{item.PRODUCT_NAME}</td>
                     <td>{item.DESCRIPTION}</td>
-                    <td>{item.CATEGORY}</td>
                     <td>{item.QTY_AVAILABLE ?? "N/A"}</td>
                     <td>{item.UNIT}</td>
                     <td>{item.WAREHOUSE_ID}</td>

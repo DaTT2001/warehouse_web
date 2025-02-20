@@ -4,6 +4,7 @@ import { getInventoryByID, updateProductQuantity } from "../api/erpAPI";
 import { saveOrder } from "../api/warehouseAPI";
 import { toast } from "react-toastify";
 import { jwtDecode } from "jwt-decode";
+import { activityLogger } from "../utils/activityLogger";
 
 const TakeProductModal = ({ show, handleClose }) => {
   const [productID, setProductID] = useState("");
@@ -90,7 +91,7 @@ const TakeProductModal = ({ show, handleClose }) => {
       
       // await updateProductQuantity(orderData.productid, orderData.quantity);
       toast.success("Lấy hàng thành công! ✅");
-
+      activityLogger(`Lấy sản phẩm ${orderData.productid} số lượng  ${orderData.quantity} thành công`);
       setShowPreview(false); // Đóng modal preview
       handleClose(); // Đóng modal chính
       resetForm(); // Reset form

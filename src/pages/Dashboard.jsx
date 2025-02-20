@@ -13,7 +13,6 @@ ChartJS.register(CategoryScale, ArcElement, LinearScale, BarElement, Title, Tool
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [inventory, setInventory] = useState([]);
   const [lowStockProducts, setLowStockProducts] = useState(0);
   const [outOfStockProducts, setOutOfStockProducts] = useState(0);
   const [showTakeModal, setShowTakeModal] = useState(false);
@@ -36,8 +35,6 @@ const Dashboard = () => {
           setRecords(inventoryData.totalRecords);
         }
         if (Array.isArray(inventoryData.data)) {
-          setInventory(inventoryData.data);
-          console.log(inventoryData.data);
         } else {
           console.error("Dữ liệu trả về không hợp lệ:", inventoryData);
         }

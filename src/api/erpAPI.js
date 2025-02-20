@@ -85,3 +85,21 @@ export const updateProductQuantity = async (productId, quantityToSubtract) => {
     throw new Error("Lỗi khi cập nhật số lượng sản phẩm!");
   }
 };
+
+export const updoProductQuantity = async (productId, quantityToUndo) => {
+  try {
+    const response = await axios.put(`${API_ERP_URL}/inventory/${productId}/add-qty`, {
+      qty_to_add: quantityToUndo,
+    });
+
+    if (response.data) {
+      return response.data;
+    } else {
+      throw new Error("Không thể cập nhật số lượng sản phẩm");
+    }
+  } catch (error) {
+    console.error("❌ Lỗi hoàn tác số lượng sản phẩm:", error.response?.data?.error || error.message);
+    throw new Error("Lỗi khi hoàn tác số lượng sản phẩm!");
+  }
+};
+
