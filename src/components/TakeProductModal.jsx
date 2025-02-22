@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Modal, Button, Form, Table } from "react-bootstrap";
-import { getInventoryByID, updateProductQuantity } from "../api/erpAPI";
+import { generateUniqueOrderID, getEmployeeData, getInventoryByID, insertData } from "../api/erpAPI";
 import { saveOrder } from "../api/warehouseAPI";
 import { toast } from "react-toastify";
 import { jwtDecode } from "jwt-decode";
 import { activityLogger } from "../utils/activityLogger";
+import { getCurrentTimeString } from "../utils/functions";
 
 const TakeProductModal = ({ show, handleClose }) => {
   const [productID, setProductID] = useState("");
@@ -14,6 +15,7 @@ const TakeProductModal = ({ show, handleClose }) => {
   const [showPreview, setShowPreview] = useState(false); // Kiểm soát hiển thị modal preview
   const [countdown, setCountdown] = useState(300); // Đếm ngược 5 phút
   const [isProductIDDisabled, setIsProductIDDisabled] = useState(false); // Trạng thái disable của ô nhập mã sản phẩm
+  // const [employeeData, setEmployeeData] = useState(null);
 
   useEffect(() => {
     let timer;
@@ -80,25 +82,52 @@ const TakeProductModal = ({ show, handleClose }) => {
     }
   };
 
-  const handleConfirmOrder = async () => {
-    if (!orderData) return;
+const handleConfirmOrder = async () => {
+  if (!orderData) {
+      toast.error("Dữ liệu đơn hàng không hợp lệ ❌");
+      return;
+  }
+  await saveOrder(orderData);
+  try {
+      console.log("Bắt đầu xử lý đơn hàng...", orderData);
 
-    try {
-      // Cập nhật số lượng sản phẩm
-      await updateProductQuantity(orderData.productid, orderData.quantity);
-      await saveOrder(orderData);
-      console.log(orderData);
-      
-      // await updateProductQuantity(orderData.productid, orderData.quantity);
+      // Bước 1: Sinh mã đơn hàng mới
+      const orderID = await generateUniqueOrderID();
+      console.log("Mã đơn hàng:", orderID);
+
+      // Bước 2: Lấy thông tin nhân viên (CHẮC CHẮN phải có await)
+      const employeeData = await getEmployeeData(orderData.employee_id);
+      if (!employeeData || !employeeData.deptID) {
+          console.error("Không tìm thấy thông tin phòng ban của nhân viên!");
+          toast.error("Lỗi: Không tìm thấy thông tin nhân viên ❌");
+          return;
+      }
+      console.log("Thông tin nhân viên:", employeeData);
+
+      // Bước 3: Đảm bảo dữ liệu đã có trước khi insert
+      const deptID = employeeData.deptID;
+      const employeeID = orderData.employee_id;
+      const timeString = getCurrentTimeString();
+      console.log("Dữ liệu sẽ insert:", { orderID, deptID, employeeID, timeString });
+
+      // Bước 4: Insert dữ liệu (CHẮC CHẮN phải có await)
+      await insertData(orderID, deptID, employeeID, timeString);
+
+      // Hiển thị thông báo thành công
       toast.success("Lấy hàng thành công! ✅");
-      activityLogger(`Lấy sản phẩm ${orderData.productid} số lượng  ${orderData.quantity} thành công`);
-      setShowPreview(false); // Đóng modal preview
-      handleClose(); // Đóng modal chính
-      resetForm(); // Reset form
-    } catch (error) {
+
+      // Ghi log hoạt động
+      activityLogger(`Lấy sản phẩm ${orderData.productid} số lượng ${orderData.quantity} thành công`);
+
+      // Đóng modal & reset form
+      setShowPreview(false);
+      handleClose();
+      resetForm();
+  } catch (error) {
+      console.error("Lỗi khi xử lý đơn xuất kho:", error);
       toast.error("Lỗi khi xử lý đơn xuất kho ❌");
-    }
-  };
+  }
+};
 
   const resetForm = () => {
     setProductID("");
@@ -184,7 +213,7 @@ const TakeProductModal = ({ show, handleClose }) => {
                 </tr>
                 <tr>
                   <td><strong>Số lượng</strong></td>
-                  <td>{orderData.quantity}</td>
+                  <td>{orderData.quantity} {selectedProduct.UNIT}</td>
                 </tr>
                 <tr>
                   <td><strong>Thời gian</strong></td>
