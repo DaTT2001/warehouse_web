@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { Modal, Button, Form, Table } from "react-bootstrap";
-import { generateUniqueOrderID, getEmployeeData, getInventoryByID, insertData } from "../api/erpAPI";
+import { generateUniqueOrderID, getEmployeeData, getInventoryByID, insertData, insertINBData } from "../api/erpAPI";
 import { saveOrder } from "../api/warehouseAPI";
 import { toast } from "react-toastify";
 import { jwtDecode } from "jwt-decode";
 import { activityLogger } from "../utils/activityLogger";
 import { getCurrentTimeString } from "../utils/functions";
+import { sendOrderEmail } from "../api/emailAPI";
 
 const TakeProductModal = ({ show, handleClose }) => {
   const [productID, setProductID] = useState("");
@@ -71,7 +72,7 @@ const TakeProductModal = ({ show, handleClose }) => {
         productname: selectedProduct.PRODUCT_NAME,
         quantity: parseInt(quantity),
         timestamp: new Date().toISOString(),
-        type: "Export",
+        type: "Export"
       });
 
       setCountdown(300); // Reset countdown
@@ -87,13 +88,14 @@ const handleConfirmOrder = async () => {
       toast.error("Dữ liệu đơn hàng không hợp lệ ❌");
       return;
   }
-  await saveOrder(orderData);
   try {
       console.log("Bắt đầu xử lý đơn hàng...", orderData);
-
       // Bước 1: Sinh mã đơn hàng mới
       const orderID = await generateUniqueOrderID();
       console.log("Mã đơn hàng:", orderID);
+      const newOrderData = { ...orderData, erp_order_id: orderID };
+      console.log(newOrderData); // Kiểm tra lại dữ liệu trước khi gửi
+      await saveOrder(newOrderData);
 
       // Bước 2: Lấy thông tin nhân viên (CHẮC CHẮN phải có await)
       const employeeData = await getEmployeeData(orderData.employee_id);
@@ -112,7 +114,8 @@ const handleConfirmOrder = async () => {
 
       // Bước 4: Insert dữ liệu (CHẮC CHẮN phải có await)
       await insertData(orderID, deptID, employeeID, timeString);
-
+      await insertINBData(orderID, orderData.productid, orderData.quantity, selectedProduct.UNIT);
+      await sendOrderEmail(orderID, orderData.productid, orderData.productname, orderData.quantity, orderData.timestamp, orderData.employee_id, orderData.employee_name); // Gửi email thông báo
       // Hiển thị thông báo thành công
       toast.success("Lấy hàng thành công! ✅");
 

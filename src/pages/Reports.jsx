@@ -55,16 +55,17 @@ const Reports = () => {
   const handleExportExcel = () => {
     const exportData = filteredReports.map(report => ({
       ID: report.id,
+      "ERP Order ID": report.erp_order_id, // Thêm dòng này
       "Product ID": report.productid,
       "Product Name": report.productname,
       Quantity: report.quantity,
       Date: report.timestamp
     }));
-
+  
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Reports");
-
+  
     const filterInfo = [
       ["Filters Applied:"],
       ["Type", filter.type || "All"],
@@ -75,10 +76,10 @@ const Reports = () => {
       ["Employee Name", filter.employee_name || "All"],
       ["Employee ID", filter.employee_id || "All"]
     ];
-
+  
     const filterSheet = XLSX.utils.aoa_to_sheet(filterInfo);
     XLSX.utils.book_append_sheet(workbook, filterSheet, "Filters");
-
+  
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
     const dataBlob = new Blob([excelBuffer], { type: "application/octet-stream" });
     saveAs(dataBlob, `Reports_${new Date().toISOString().substring(0,19)}.xlsx`);
@@ -170,6 +171,7 @@ const Reports = () => {
             <thead>
               <tr>
                 <th>ID sản phẩm</th>
+                <th>ERP Order ID</th>
                 <th>Tên sản phẩm</th>
                 <th>Nhân viên</th>
                 <th>Mã nhân viên</th>
@@ -182,6 +184,7 @@ const Reports = () => {
                 displayedReports.map((report) => (
                   <tr key={report.id}>
                     <td>{report.productid}</td>
+                    <td>{report.erp_order_id}</td>
                     <td>{report.productname}</td>
                     <td>{report.employee_name}</td>
                     <td>{report.employee_id}</td>

@@ -189,7 +189,7 @@ export const insertINBData = async (orderID, productID, quantity, unit) => {
     "INB08" : unit
   }
   try {
-    const response = await axios.post('/api/insert-inb', data);
+    const response = await axios.post(`${API_ERP_URL}/insert-inb`, data);
     if (response.data) {
       console.log('✅ Dữ liệu INB đã được insert thành công:', response.data.message);
       return response.data;
