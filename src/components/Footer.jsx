@@ -1,20 +1,42 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css"; // Import Bootstrap Icons
-import styles from "../styles/Footer.module.css"
+import styles from "../styles/Footer.module.css";
+import { LanguageContext } from "../services/LanguageContext";
+
+const locales = {
+  vi: {
+      warehouseManagement: "Quản Lý Kho",
+      allRightsReserved: "Mọi quyền được bảo lưu.",
+      developedBy: "Phát triển bởi"
+  },
+  en: {
+      warehouseManagement: "Warehouse Management",
+      allRightsReserved: "All rights reserved.",
+      developedBy: "Developed by"
+  },
+  zh: {
+      warehouseManagement: "仓库管理",
+      allRightsReserved: "版权所有。",
+      developedBy: "开发者"
+  }
+};
+
 
 const Footer = () => {
+  const { language } = useContext(LanguageContext);
+
   return (
     <footer className="bg-dark text-light text-center py-3">
       <Container>
         <Row>
           <Col>
-            <p>© {new Date().getFullYear()} Quản Lý Kho. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} {locales[language].warehouseManagement}. {locales[language].allRightsReserved}</p>
           </Col>
         </Row>
         <Row>
           <Col className="d-flex justify-content-center align-items-center">
-            <span className="me-2">Developed by</span>
+            <span className="me-2">{locales[language].developedBy}</span>
             <a
               href="https://github.com/DaTT2001"
               target="_blank"

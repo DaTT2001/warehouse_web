@@ -18,6 +18,7 @@ import LogsPage from './pages/LogsPage';
 import SessionTimer from './components/SessionTimer';
 import Reports from './pages/Reports';
 import Warehouse from './pages/Warehouse';
+import { LanguageProvider } from "./services/LanguageContext";
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -33,6 +34,7 @@ const Layout = ({ children }) => {
 };
 
 function App() {
+
   const handleSessionExpire = useCallback(() => {
     console.log("Phiên làm việc đã hết hạn!");
     sessionStorage.removeItem("token");
@@ -40,22 +42,24 @@ function App() {
   }, []);
   return (
     <> 
-      <Router>
-        <SessionTimer onSessionExpire={handleSessionExpire}/>
-        <Layout>
-          <Routes>
-            <Route path="/login" element={<Login />} /> 
-            <Route path="/" element={<PrivateRoute element={<Dashboard />} />} />
-            {/* <Route path="/inventory" element={<PrivateRoute element={<Inventory />} />} /> */}
-            <Route path="/inventory" element={<PrivateRoute element={<Warehouse />} />} />
-            <Route path="/logs" element={<PrivateRoute element={<LogsPage />} />} />
-            {/* <Route path="/suppliers" element={<PrivateRoute element={<Suppliers />} />} /> */}
-            <Route path="/reports" element={<PrivateRoute element={<Reports />} />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Layout>
-        <ToastContainer position="top-right" autoClose={3000} />
-      </Router>
+      <LanguageProvider>
+        <Router>
+          <SessionTimer onSessionExpire={handleSessionExpire}/>
+          <Layout>
+            <Routes>
+              <Route path="/login" element={<Login />} /> 
+              <Route path="/" element={<PrivateRoute element={<Dashboard />} />} />
+              {/* <Route path="/inventory" element={<PrivateRoute element={<Inventory />} />} /> */}
+              <Route path="/inventory" element={<PrivateRoute element={<Warehouse/>} />} />
+              <Route path="/logs" element={<PrivateRoute element={<LogsPage />} />} />
+              {/* <Route path="/suppliers" element={<PrivateRoute element={<Suppliers />} />} /> */}
+              <Route path="/reports" element={<PrivateRoute element={<Reports />} />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Layout>
+          <ToastContainer position="top-right" autoClose={3000} />
+        </Router>
+      </LanguageProvider>
     </>
   );
 }

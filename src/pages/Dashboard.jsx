@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Card, Button, Row, Col, Container } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { Doughnut } from "react-chartjs-2";
@@ -7,6 +7,8 @@ import zoomPlugin from "chartjs-plugin-zoom";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import TakeProductModal from "../components/TakeProductModal";
 import { getInventory } from "../api/erpAPI";
+import { LanguageContext } from "../services/LanguageContext"; 
+import locales from "../locales";
 
 // Register ChartJS plugins
 ChartJS.register(CategoryScale, ArcElement, LinearScale, BarElement, Title, Tooltip, Legend, zoomPlugin, ChartDataLabels);
@@ -17,6 +19,7 @@ const Dashboard = () => {
   const [outOfStockProducts, setOutOfStockProducts] = useState(0);
   const [showTakeModal, setShowTakeModal] = useState(false);
   const [records, setRecords] = useState(0);
+  const { language } = useContext(LanguageContext);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,7 +54,7 @@ const Dashboard = () => {
   };
 
   const chartData = {
-    labels: ['Sản phẩm hết hàng', 'Sản phẩm sắp hết', 'Sản phẩm còn lại'],
+    labels: [locales[language].outOfStock, locales[language].lowStock, locales[language].inStock],
     datasets: [{
       data: [outOfStockProducts, lowStockProducts, records - outOfStockProducts - lowStockProducts],
       backgroundColor: ['#FF4B5C', '#FFB144', '#28A745'],
@@ -90,31 +93,31 @@ const Dashboard = () => {
         <Col md={12}>
           <Card className="p-4 shadow-sm">
             <Card.Body>
-              <Card.Title className="text-center fw-bold fs-4">Tổng quan kho</Card.Title>
+              <Card.Title className="text-center fw-bold fs-4">{locales[language].warehouseDetail}</Card.Title>
               <Row className="text-center">
                 <Col>
-                  <h5 className="text-muted">Loại sản phẩm</h5>
+                  <h5 className="text-muted">{locales[language].productType}</h5>
                   <h3 className="fw-bold text-primary">{records}</h3>
                 </Col>
                 <Col>
-                  <h5 className="text-muted">Sản phẩm tồn kho</h5>
+                  <h5 className="text-muted">{locales[language].totalProducts}</h5>
                   <h3 className="fw-bold text-success">{records - outOfStockProducts - lowStockProducts}</h3>
                 </Col>
                 <Col>
-                  <h5 className="text-muted">Sản phẩm hết hàng</h5>
+                  <h5 className="text-muted">{locales[language].outOfStockProducts}</h5>
                   <h3 className="fw-bold text-danger">{outOfStockProducts}</h3>
                 </Col>
                 <Col>
-                  <h5 className="text-muted">Sản phẩm sắp hết hàng</h5>
+                  <h5 className="text-muted">{locales[language].lowStockProducts}</h5>
                   <h3 className="fw-bold text-warning">{lowStockProducts}</h3>
                 </Col>
               </Row>
               <div className="d-flex justify-content-center gap-3 mt-4">
                 <Button variant="primary" size="lg" onClick={() => handleNavigate("/inventory")}>
-                  Quản lý kho
+                 {locales[language].manage}
                 </Button>
                 <Button variant="warning" size="lg" onClick={() => setShowTakeModal(true)}>
-                  Xuất kho
+                {locales[language].export}
                 </Button>
               </div>
             </Card.Body>
@@ -126,7 +129,7 @@ const Dashboard = () => {
         <Col md={12}>
           <Card>
             <Card.Body>
-              <Card.Title>Thống kê tình trạng kho</Card.Title>
+              <Card.Title>{locales[language].warehouseStatus}</Card.Title>
               <div style={{ width: "100%", height: "300px" }}>
                 <Doughnut data={chartData} options={chartOptions} />
               </div>

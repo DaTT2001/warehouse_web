@@ -1,8 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Table, Container, Spinner, Alert, Pagination, Form, Row, Col, ButtonGroup, DropdownButton, Dropdown } from "react-bootstrap";
 import { getLogs } from "../api/warehouseAPI"; // Đảm bảo import đúng file API
+import { LanguageContext } from "../services/LanguageContext";
+import locales from "../locales";
 
 const LogsPage = () => {
+  const { language } = useContext(LanguageContext);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -11,7 +14,7 @@ const LogsPage = () => {
   const [sortOrder, setSortOrder] = useState("desc"); // Thêm trạng thái cho sắp xếp thời gian
   const [startDate, setStartDate] = useState(""); // Thêm trạng thái cho ngày bắt đầu
   const [endDate, setEndDate] = useState(""); // Thêm trạng thái cho ngày kết thúc
-  const logsPerPage = 20;
+  const logsPerPage = 50;
 
   // Lấy dữ liệu logs từ API
   useEffect(() => {
@@ -20,14 +23,14 @@ const LogsPage = () => {
         const data = await getLogs();
         setLogs(data);
       } catch (err) {
-        setError("Không thể tải logs!");
+        setError(locales[language].fetchError);
       } finally {
         setLoading(false);
       }
     };
 
     fetchLogs();
-  }, []);
+  }, [language]);
 
   // Lọc logs theo người dùng và khoảng thời gian
   const filteredLogs = logs.filter(log => {
@@ -60,7 +63,7 @@ const LogsPage = () => {
 
   return (
     <Container className="mt-4">
-      <h2 className="mb-4">📜 Nhật ký hoạt động</h2>
+      <h2 className="mb-4">📜 {locales[language].activityLogs}</h2>
 
       {loading && <Spinner animation="border" />}
       {error && <Alert variant="danger">{error}</Alert>}
@@ -71,7 +74,7 @@ const LogsPage = () => {
             <Col md={3}>
               <Form.Control
                 type="text"
-                placeholder="🔍 Lọc theo người dùng..."
+                placeholder={locales[language].filterByUser}
                 value={userFilter}
                 onChange={(e) => {
                   setUserFilter(e.target.value);
@@ -82,7 +85,7 @@ const LogsPage = () => {
             <Col md={3}>
               <Form.Control
                 type="date"
-                placeholder="Từ ngày"
+                placeholder={locales[language].fromDate}
                 value={startDate}
                 onChange={(e) => {
                   setStartDate(e.target.value);
@@ -93,7 +96,7 @@ const LogsPage = () => {
             <Col md={3}>
               <Form.Control
                 type="date"
-                placeholder="Đến ngày"
+                placeholder={locales[language].toDate}
                 value={endDate}
                 onChange={(e) => {
                   setEndDate(e.target.value);
@@ -104,7 +107,7 @@ const LogsPage = () => {
             <Col md={3} className="d-flex justify-content-end">
               <DropdownButton
                 as={ButtonGroup}
-                title={`Sắp xếp theo thời gian ${sortOrder === "asc" ? "⬆️" : "⬇️"}`}
+                title={`${locales[language].sortByTime} ${sortOrder === "asc" ? "⬆️" : "⬇️"}`}
                 id="bg-nested-dropdown"
                 variant="secondary"
               >
@@ -116,7 +119,7 @@ const LogsPage = () => {
                     setCurrentPage(1); // Reset pagination
                   }}
                 >
-                  ⬆️ Tăng dần
+                  ⬆️ {locales[language].ascending}
                 </Dropdown.Item>
                 <Dropdown.Item
                   eventKey="2"
@@ -126,7 +129,7 @@ const LogsPage = () => {
                     setCurrentPage(1); // Reset pagination
                   }}
                 >
-                  ⬇️ Giảm dần
+                  ⬇️ {locales[language].descending}
                 </Dropdown.Item>
               </DropdownButton>
             </Col>
@@ -135,9 +138,9 @@ const LogsPage = () => {
             <thead>
               <tr>
                 <th>#</th>
-                <th>Người dùng</th>
-                <th>Hành động</th>
-                <th>Thời gian</th>
+                <th>{locales[language].user}</th>
+                <th>{locales[language].action}</th>
+                <th>{locales[language].time}</th>
               </tr>
             </thead>
             <tbody>
@@ -147,13 +150,13 @@ const LogsPage = () => {
                     <td>{indexOfFirstLog + index + 1}</td>
                     <td>{log.username}</td>
                     <td>{log.action}</td>
-                    <td>{new Date(log.timestamp).toLocaleString("vi-VN")}</td>
+                    <td>{new Date(log.timestamp).toLocaleString(language)}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td colSpan="4" className="text-center">
-                    Không có dữ liệu.
+                    {locales[language].noData}
                   </td>
                 </tr>
               )}

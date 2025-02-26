@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Modal, Button, Form, Table } from "react-bootstrap";
 import { generateUniqueOrderID, getEmployeeData, getInventoryByID, insertData, insertINBData } from "../api/erpAPI";
 import { saveOrder } from "../api/warehouseAPI";
@@ -7,8 +7,11 @@ import { jwtDecode } from "jwt-decode";
 import { activityLogger } from "../utils/activityLogger";
 import { getCurrentTimeString } from "../utils/functions";
 import { sendOrderEmail } from "../api/emailAPI";
+import { LanguageContext } from "../services/LanguageContext";
+import locales from "../locales";
 
 const TakeProductModal = ({ show, handleClose }) => {
+  const { language } = useContext(LanguageContext);
   const [productID, setProductID] = useState("");
   const [quantity, setQuantity] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -27,11 +30,11 @@ const TakeProductModal = ({ show, handleClose }) => {
     } else if (countdown === 0) {
       setShowPreview(false);
       setOrderData(null);
-      toast.info("Hết thời gian xác nhận, đơn xuất kho đã bị hủy! ⏳");
+      toast.info(locales[language].confirmationTimeout);
     }
 
     return () => clearInterval(timer);
-  }, [showPreview, countdown]);
+  }, [showPreview, countdown, language]);
 
   const handleCheckProduct = async () => {
     try {
@@ -43,10 +46,10 @@ const TakeProductModal = ({ show, handleClose }) => {
         setQuantity("");
         setIsProductIDDisabled(true); // Disable ô nhập mã sản phẩm
       } else {
-        toast.error("Mã sản phẩm không tồn tại!");
+        toast.error(locales[language].productNotFound);
       }
     } catch (error) {
-      toast.error("Lỗi khi lấy thông tin sản phẩm!");
+      toast.error(locales[language].productFetchError);
     }
   };
 
@@ -57,7 +60,7 @@ const TakeProductModal = ({ show, handleClose }) => {
     // Lấy token từ sessionStorage
     const token = sessionStorage.getItem("token");
     if (!token) {
-      toast.error("Lỗi: Không tìm thấy token! ❌");
+      toast.error(locales[language].tokenNotFound);
       return;
     }
 
@@ -79,20 +82,20 @@ const TakeProductModal = ({ show, handleClose }) => {
       setShowPreview(true); // Mở modal xem trước đơn hàng
 
     } catch (error) {
-      toast.error("Lỗi khi giải mã token!");
+      toast.error(locales[language].tokenDecodeError);
     }
   };
 
-const handleConfirmOrder = async () => {
-  if (!orderData) {
-      toast.error("Dữ liệu đơn hàng không hợp lệ ❌");
+  const handleConfirmOrder = async () => {
+    if (!orderData) {
+      toast.error(locales[language].invalidOrderData);
       return;
-  }
-  try {
-      console.log("Bắt đầu xử lý đơn hàng...", orderData);
+    }
+    try {
+      console.log(locales[language].processingOrder, orderData);
       // Bước 1: Sinh mã đơn hàng mới
       const orderID = await generateUniqueOrderID();
-      console.log("Mã đơn hàng:", orderID);
+      console.log(locales[language].orderID, orderID);
       const newOrderData = { ...orderData, erp_order_id: orderID };
       console.log(newOrderData); // Kiểm tra lại dữ liệu trước khi gửi
       await saveOrder(newOrderData);
@@ -100,37 +103,37 @@ const handleConfirmOrder = async () => {
       // Bước 2: Lấy thông tin nhân viên (CHẮC CHẮN phải có await)
       const employeeData = await getEmployeeData(orderData.employee_id);
       if (!employeeData || !employeeData.deptID) {
-          console.error("Không tìm thấy thông tin phòng ban của nhân viên!");
-          toast.error("Lỗi: Không tìm thấy thông tin nhân viên ❌");
-          return;
+        console.error(locales[language].employeeDataNotFound);
+        toast.error(locales[language].employeeDataError);
+        return;
       }
-      console.log("Thông tin nhân viên:", employeeData);
+      console.log(locales[language].employeeInfo, employeeData);
 
       // Bước 3: Đảm bảo dữ liệu đã có trước khi insert
       const deptID = employeeData.deptID;
       const employeeID = orderData.employee_id;
       const timeString = getCurrentTimeString();
-      console.log("Dữ liệu sẽ insert:", { orderID, deptID, employeeID, timeString });
+      console.log(locales[language].dataToInsert, { orderID, deptID, employeeID, timeString });
 
       // Bước 4: Insert dữ liệu (CHẮC CHẮN phải có await)
       await insertData(orderID, deptID, employeeID, timeString);
       await insertINBData(orderID, orderData.productid, orderData.quantity, selectedProduct.UNIT);
       await sendOrderEmail(orderID, orderData.productid, orderData.productname, orderData.quantity, orderData.timestamp, orderData.employee_id, orderData.employee_name); // Gửi email thông báo
       // Hiển thị thông báo thành công
-      toast.success("Lấy hàng thành công! ✅");
+      toast.success(locales[language].orderSuccess);
 
       // Ghi log hoạt động
-      activityLogger(`Lấy sản phẩm ${orderData.productid} số lượng ${orderData.quantity} thành công`);
+      activityLogger(`${locales[language].logProductTaken} ${orderData.productid} ${locales[language].quantity} ${orderData.quantity} ${locales[language].success}`);
 
       // Đóng modal & reset form
       setShowPreview(false);
       handleClose();
       resetForm();
-  } catch (error) {
-      console.error("Lỗi khi xử lý đơn xuất kho:", error);
-      toast.error("Lỗi khi xử lý đơn xuất kho ❌");
-  }
-};
+    } catch (error) {
+      console.error(locales[language].orderProcessingError, error);
+      toast.error(locales[language].orderProcessingError);
+    }
+  };
 
   const resetForm = () => {
     setProductID("");
@@ -147,11 +150,11 @@ const handleConfirmOrder = async () => {
       {/* Modal nhập thông tin lấy hàng */}
       <Modal show={show} onHide={() => { handleClose(); resetForm(); }} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Lấy hàng</Modal.Title>
+          <Modal.Title>{locales[language].takeProduct}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form.Group className="mb-3">
-            <Form.Label>Nhập mã sản phẩm</Form.Label>
+            <Form.Label>{locales[language].enterProductID}</Form.Label>
             <Form.Control
               type="text"
               value={productID}
@@ -161,13 +164,13 @@ const handleConfirmOrder = async () => {
             />
           </Form.Group>
           <Button variant="info" className="mb-3 w-100" onClick={handleCheckProduct} disabled={!productID}>
-            Kiểm tra
+            {locales[language].check}
           </Button>
 
           {selectedProduct && (
             <>
               <Form.Group className="mb-3">
-                <Form.Label>Số lượng lấy (Tối đa: {selectedProduct.QTY_AVAILABLE})</Form.Label>
+                <Form.Label>{locales[language].quantityToTake} ({locales[language].max}: {selectedProduct.QTY_AVAILABLE})</Form.Label>
                 <Form.Control
                   type="number"
                   min="1"
@@ -176,7 +179,7 @@ const handleConfirmOrder = async () => {
                 />
                 {parseInt(quantity) > selectedProduct.QTY_AVAILABLE && (
                   <Form.Text className="text-danger">
-                    Số lượng nhập vào vượt quá số lượng tối đa!
+                    {locales[language].quantityExceeds}
                   </Form.Text>
                 )}
               </Form.Group>
@@ -186,7 +189,7 @@ const handleConfirmOrder = async () => {
                 onClick={handlePreviewOrder}
                 disabled={!quantity || parseInt(quantity) > selectedProduct.QTY_AVAILABLE}
               >
-                🔍 Xem trước đơn hàng
+                🔍 {locales[language].previewOrder}
               </Button>
             </>
           )}
@@ -196,43 +199,43 @@ const handleConfirmOrder = async () => {
       {/* Modal xem trước đơn hàng */}
       <Modal show={showPreview} onHide={() => { setShowPreview(false); resetForm(); }} centered>
         <Modal.Header closeButton>
-          <Modal.Title>🔍 Xem trước đơn xuất kho</Modal.Title>
+          <Modal.Title>🔍 {locales[language].previewOrder}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {orderData && (
             <Table striped bordered hover>
               <tbody>
                 <tr>
-                  <td><strong>Nhân viên</strong></td>
+                  <td><strong>{locales[language].employee}</strong></td>
                   <td>{orderData.employee_name} ({orderData.role})</td>
                 </tr>
                 <tr>
-                  <td><strong>Mã NV</strong></td>
+                  <td><strong>{locales[language].employeeID}</strong></td>
                   <td>{orderData.employee_id}</td>
                 </tr>
                 <tr>
-                  <td><strong>Sản phẩm</strong></td>
+                  <td><strong>{locales[language].product}</strong></td>
                   <td>{orderData.productname} (ID: {orderData.productid})</td>
                 </tr>
                 <tr>
-                  <td><strong>Số lượng</strong></td>
+                  <td><strong>{locales[language].quantity}</strong></td>
                   <td>{orderData.quantity} {selectedProduct.UNIT}</td>
                 </tr>
                 <tr>
-                  <td><strong>Thời gian</strong></td>
+                  <td><strong>{locales[language].time}</strong></td>
                   <td>{new Date(orderData.timestamp).toLocaleString()}</td>
                 </tr>
                 <tr>
-                  <td><strong>Thời gian còn lại</strong></td>
-                  <td>{Math.floor(countdown / 60)} phút {countdown % 60} giây</td>
+                  <td><strong>{locales[language].timeRemaining}</strong></td>
+                  <td>{Math.floor(countdown / 60)} {locales[language].minutes} {countdown % 60} {locales[language].seconds}</td>
                 </tr>
               </tbody>
             </Table>
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => { setShowPreview(false); resetForm(); handleClose() }}>❌ Hủy</Button>
-          <Button variant="primary" onClick={handleConfirmOrder}>✅ Xác nhận</Button>
+          <Button variant="secondary" onClick={() => { setShowPreview(false); resetForm(); handleClose() }}>❌ {locales[language].cancel}</Button>
+          <Button variant="primary" onClick={handleConfirmOrder}>✅ {locales[language].confirm}</Button>
         </Modal.Footer>
       </Modal>
     </>

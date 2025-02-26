@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { getOrders } from '../api/warehouseAPI';
 import { Table, Container, Form, Row, Col, Button, Alert, Spinner, Pagination, Modal } from 'react-bootstrap';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import { LanguageContext } from '../services/LanguageContext';
+import locales from '../locales';
 
 const formatTimestamp = (timestamp) => {
   if (!timestamp) return "";
@@ -12,6 +14,7 @@ const formatTimestamp = (timestamp) => {
 };
 
 const Reports = () => {
+  const { language } = useContext(LanguageContext);
   const [reports, setReports] = useState([]);
   const [filter, setFilter] = useState({
     type: '',
@@ -37,14 +40,14 @@ const Reports = () => {
           timestamp: formatTimestamp(report.timestamp)
         })));
       } catch (error) {
-        setError("Không thể tải báo cáo!");
+        setError(locales[language].fetchError);
         console.error(error.message);
       } finally {
         setLoading(false);
       }
     };
     fetchReports();
-  }, []);
+  }, [language]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -55,7 +58,7 @@ const Reports = () => {
   const handleExportExcel = () => {
     const exportData = filteredReports.map(report => ({
       ID: report.id,
-      "ERP Order ID": report.erp_order_id, // Thêm dòng này
+      "ERP Order ID": report.erp_order_id,
       "Product ID": report.productid,
       "Product Name": report.productname,
       Quantity: report.quantity,
@@ -67,14 +70,14 @@ const Reports = () => {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Reports");
   
     const filterInfo = [
-      ["Filters Applied:"],
-      ["Type", filter.type || "All"],
-      ["Name", filter.name || "All"],
-      ["Start Date", filter.startDate || "All"],
-      ["End Date", filter.endDate || "All"],
-      ["Product ID", filter.productId || "All"],
-      ["Employee Name", filter.employee_name || "All"],
-      ["Employee ID", filter.employee_id || "All"]
+      [locales[language].filtersApplied],
+      [locales[language].type, filter.type || locales[language].all],
+      [locales[language].name, filter.name || locales[language].all],
+      [locales[language].startDate, filter.startDate || locales[language].all],
+      [locales[language].endDate, filter.endDate || locales[language].all],
+      [locales[language].productId, filter.productId || locales[language].all],
+      [locales[language].employeeName, filter.employee_name || locales[language].all],
+      [locales[language].employeeId, filter.employee_id || locales[language].all]
     ];
   
     const filterSheet = XLSX.utils.aoa_to_sheet(filterInfo);
@@ -111,7 +114,7 @@ const Reports = () => {
 
   return (
     <Container className="mt-4">
-      <h1>📊 Báo cáo</h1>
+      <h1>📊 {locales[language].reports}</h1>
       <Row className="mb-3 d-flex justify-content-between">
         <Col md={2}>
           <Form.Control
@@ -132,7 +135,7 @@ const Reports = () => {
         <Col md={3}>
           <Form.Control
             type="text"
-            placeholder="🔍 Tìm theo tên nhân viên..."
+            placeholder={locales[language].searchByName}
             name="employee_name"
             value={filter.employee_name}
             onChange={handleFilterChange}
@@ -141,7 +144,7 @@ const Reports = () => {
         <Col md={2}>
           <Form.Control
             type="text"
-            placeholder="🔍 Tìm theo ID sản phẩm..."
+            placeholder={locales[language].searchById}
             name="productId"
             value={filter.productId}
             onChange={handleFilterChange}
@@ -150,7 +153,7 @@ const Reports = () => {
         <Col md={2}>
           <Form.Control
             type="text"
-            placeholder="🔍 Tìm theo ID nhân viên..."
+            placeholder={locales[language].searchByEmployeeId}
             name="employee_id"
             value={filter.employee_id}
             onChange={handleFilterChange}
@@ -158,7 +161,7 @@ const Reports = () => {
         </Col>
         <Col md={1} className="d-flex justify-content-end">
           <Button variant="success" onClick={() => setShowModal(true)}>
-            Xuất
+            {locales[language].export}
           </Button>
         </Col>
       </Row>
@@ -170,13 +173,13 @@ const Reports = () => {
           <Table striped bordered hover>
             <thead>
               <tr>
-                <th>ID sản phẩm</th>
-                <th>ERP Order ID</th>
-                <th>Tên sản phẩm</th>
-                <th>Nhân viên</th>
-                <th>Mã nhân viên</th>
-                <th>Số lượng</th>
-                <th>Ngày thực hiện</th>
+                <th>{locales[language].productId}</th>
+                <th>{locales[language].erpOrderId}</th>
+                <th>{locales[language].productName}</th>
+                <th>{locales[language].employeeName}</th>
+                <th>{locales[language].employeeId}</th>
+                <th>{locales[language].quantity}</th>
+                <th>{locales[language].date}</th>
               </tr>
             </thead>
             <tbody>
@@ -195,7 +198,7 @@ const Reports = () => {
               ) : (
                 <tr>
                   <td colSpan="8" className="text-center">
-                    Không có dữ liệu.
+                    {locales[language].noData}
                   </td>
                 </tr>
               )}
@@ -218,12 +221,12 @@ const Reports = () => {
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Nhập các trường filter</Modal.Title>
+          <Modal.Title>{locales[language].enterFilterFields}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
             <Form.Group controlId="formStartDate">
-              <Form.Label>Ngày bắt đầu</Form.Label>
+              <Form.Label>{locales[language].startDate}</Form.Label>
               <Form.Control
                 type="date"
                 name="startDate"
@@ -232,7 +235,7 @@ const Reports = () => {
               />
             </Form.Group>
             <Form.Group controlId="formEndDate">
-              <Form.Label>Ngày kết thúc</Form.Label>
+              <Form.Label>{locales[language].endDate}</Form.Label>
               <Form.Control
                 type="date"
                 name="endDate"
@@ -241,7 +244,7 @@ const Reports = () => {
               />
             </Form.Group>
             <Form.Group controlId="formProductId">
-              <Form.Label>ID sản phẩm</Form.Label>
+              <Form.Label>{locales[language].productId}</Form.Label>
               <Form.Control
                 type="text"
                 name="productId"
@@ -250,7 +253,7 @@ const Reports = () => {
               />
             </Form.Group>
             <Form.Group controlId="formEmployeeName">
-              <Form.Label>Tên nhân viên</Form.Label>
+              <Form.Label>{locales[language].employeeName}</Form.Label>
               <Form.Control
                 type="text"
                 name="employee_name"
@@ -259,7 +262,7 @@ const Reports = () => {
               />
             </Form.Group>
             <Form.Group controlId="formEmployeeId">
-              <Form.Label>ID nhân viên</Form.Label>
+              <Form.Label>{locales[language].employeeId}</Form.Label>
               <Form.Control
                 type="text"
                 name="employee_id"
@@ -271,10 +274,10 @@ const Reports = () => {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Đóng
+            {locales[language].close}
           </Button>
           <Button variant="primary" onClick={handleExportExcel}>
-            Xuất
+            {locales[language].export}
           </Button>
         </Modal.Footer>
       </Modal>
