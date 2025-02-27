@@ -7,8 +7,41 @@ import { isAuthenticated } from '../services/authService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import logo from "../assets/images/KD logo tách nềnn.png"
 import { sendLog } from '../utils/functions';
+import { useContext } from 'react';
+import { LanguageContext } from '../services/LanguageContext';
+
+const locales = {
+  en: {
+    appName: 'Warehouse Management',
+    login: 'Login',
+    username: 'Username',
+    password: 'Password',
+    enterUsername: 'Enter username',
+    enterPassword: 'Enter password',
+    loggingIn: 'Logging in...',
+  },
+  vi: {
+    appName: 'Quản lý kho',
+    login: 'Đăng Nhập',
+    username: 'Tên Đăng Nhập',
+    password: 'Mật Khẩu',
+    enterUsername: 'Nhập tên đăng nhập',
+    enterPassword: 'Nhập mật khẩu',
+    loggingIn: 'Đang đăng nhập...',
+  },
+  zh: {
+    appName: '仓库管理',
+    login: '登录',
+    username: '用户名',
+    password: '密码',
+    enterUsername: '输入用户名',
+    enterPassword: '输入密码',
+    loggingIn: '正在登录...',
+  }
+};
 
 function Login() {
+  const { language } = useContext(LanguageContext);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -51,18 +84,18 @@ function Login() {
             <Card.Body>
               {/* Logo */}
               <div className="text-center mb-3">
-                <img src={logo} alt="Quản Lý Kho" style={{ height: '60px' }} />
+                <img src={logo} alt={locales[language].appName} style={{ height: '60px' }} />
               </div>
 
-              <h2 className="text-center mb-4" style={{ color: '#333' }}>Đăng Nhập</h2>
+              <h2 className="text-center mb-4" style={{ color: '#333' }}>{locales[language].login}</h2>
               {errorMessage && <p className="text-danger text-center">{errorMessage}</p>}
 
               <Form onSubmit={handleLogin}>
                 <Form.Group controlId="formUsername" className="mb-3">
-                  <Form.Label style={{ fontWeight: 'bold', color: '#555' }}>Tên Đăng Nhập</Form.Label>
+                  <Form.Label style={{ fontWeight: 'bold', color: '#555' }}>{locales[language].username}</Form.Label>
                   <Form.Control
                     type="text"
-                    placeholder="Nhập tên đăng nhập"
+                    placeholder={locales[language].enterUsername}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
@@ -72,11 +105,11 @@ function Login() {
 
                 {/* Input mật khẩu có nút hiển thị */}
                 <Form.Group controlId="formPassword" className="mb-3">
-                  <Form.Label style={{ fontWeight: 'bold', color: '#555' }}>Mật Khẩu</Form.Label>
+                  <Form.Label style={{ fontWeight: 'bold', color: '#555' }}>{locales[language].password}</Form.Label>
                   <InputGroup>
                     <Form.Control
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="Nhập mật khẩu"
+                      placeholder={locales[language].enterPassword}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -98,7 +131,7 @@ function Login() {
                   style={{ backgroundColor: '#007bff', border: 'none', padding: '10px', fontSize: '16px', borderRadius: '8px' }}
                   disabled={loading}
                 >
-                  {loading ? <LoadingSpinner size="sm" message="Đang đăng nhập..." /> : "Đăng Nhập"}
+                  {loading ? <LoadingSpinner size="sm" message={locales[language].loggingIn} /> : locales[language].login}
                 </Button>
               </Form>
             </Card.Body>

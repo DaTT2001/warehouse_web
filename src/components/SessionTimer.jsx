@@ -55,6 +55,11 @@ const SessionTimer = () => {
     return () => clearInterval(interval);
   }, [token, updateTimeLeft]); // Thêm token vào dependency array
 
+  useEffect(() => {
+    if (location.pathname === "/login") {
+      setTimeLeft(null);
+    }
+  }, [location.pathname]);
 
   if (timeLeft === null) return null; // Không hiển thị nếu không có token
 
